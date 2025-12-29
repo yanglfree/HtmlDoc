@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型是如何工作的 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --pink: #f778ba;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(163, 113, 247, 0.15), rgba(247, 120, 186, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--purple), var(--pink));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--purple)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--purple);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--purple);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(163, 113, 247, 0.1);
+            border: 1px solid rgba(163, 113, 247, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--purple)
+        }
+
+        .flow {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0
+        }
+
+        .flow-title {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px
+        }
+
+        .flow-step {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500
+        }
+
+        .flow-arrow {
+            color: var(--purple);
+            font-size: 20px
+        }
+
+        .diagram {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 20px 0;
+            text-align: center
+        }
+
+        .diagram-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text)
+        }
+
+        .layer {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 12px 0;
+            flex-wrap: wrap
+        }
+
+        .layer-item {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px
+        }
+
+        .layer-item.highlight {
+            background: rgba(163, 113, 247, 0.2);
+            border-color: var(--purple)
+        }
+
+        .arrow-down {
+            font-size: 24px;
+            color: var(--purple)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--purple)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 28px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .flow-steps {
+                flex-direction: column
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#what">什么是大模型</a><a href="#arch">架构解析</a><a href="#attention">注意力机制</a><a
+            href="#tokenize">分词与嵌入</a><a href="#inference">推理过程</a><a href="#context">上下文窗口</a><a
+            href="#limits">能力边界</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🤖 大模型是如何工作的</h1>
+            <p>Large Language Model (LLM) 工作原理快速入门指南</p>
+        </div>
+
+        <section id="what" class="section">
+            <h2>什么是大模型</h2>
+            <p>大语言模型（LLM）是基于Transformer架构的深度神经网络，通过在海量文本数据上训练，学习语言的统计规律，从而具备理解和生成自然语言的能力。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>📊 核心特点</h3>
+                    <ul>
+                        <li>参数量巨大（数十亿到数万亿）</li>
+                        <li>自回归生成（逐Token预测）</li>
+                        <li>上下文学习（In-Context Learning）</li>
+                        <li>涌现能力（Emergent Abilities）</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🏛️ 代表模型</h3>
+                    <ul>
+                        <li>GPT系列 (OpenAI)</li>
+                        <li>Claude (Anthropic)</li>
+                        <li>Gemini (Google)</li>
+                        <li>LLaMA (Meta)</li>
+                        <li>Qwen (阿里)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>💡 核心能力</h3>
+                    <ul>
+                        <li>文本理解与生成</li>
+                        <li>代码编写与解释</li>
+                        <li>推理与分析</li>
+                        <li>多轮对话</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="arch" class="section">
+            <h2>Transformer 架构</h2>
+            <p>Transformer是大模型的核心架构，由Google于2017年提出（"Attention is All You Need"）。现代LLM主要使用Decoder-only架构。</p>
+
+            <div class="diagram">
+                <div class="diagram-title">Transformer Decoder 架构</div>
+                <div class="layer">
+                    <div class="layer-item">输出概率分布 (Softmax)</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item">线性层 (Linear)</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item">Layer Norm</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item highlight">Decoder Layer × N</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item">位置编码 (Positional Encoding)</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item">Token Embedding</div>
+                </div>
+                <div class="arrow-down">↑</div>
+                <div class="layer">
+                    <div class="layer-item">输入 Tokens</div>
+                </div>
+            </div>
+
+            <h3>Decoder Layer 组成</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3>🎯 自注意力层</h3>
+                    <p>Masked Multi-Head Self-Attention，允许每个位置关注之前的所有位置，捕获上下文依赖关系。</p>
+                </div>
+                <div class="card">
+                    <h3>🔗 前馈网络</h3>
+                    <p>Feed-Forward Network (FFN)，两层全连接网络，引入非线性变换，增强表达能力。</p>
+                </div>
+                <div class="card">
+                    <h3>➕ 残差连接</h3>
+                    <p>Residual Connection，将输入直接加到输出上，缓解梯度消失，使深层网络可训练。</p>
+                </div>
+                <div class="card">
+                    <h3>📏 层归一化</h3>
+                    <p>Layer Normalization，稳定训练过程，加速收敛，每层输出都进行归一化。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="attention" class="section">
+            <h2>注意力机制</h2>
+            <p>注意力机制是Transformer的核心，使模型能够动态地关注输入序列中的不同部分。</p>
+
+            <h3>核心公式</h3>
+            <div class="tip"><strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) · V</strong>
+                <p style="margin-top:12px">Q (Query): 查询向量，代表"我在找什么"<br>
+                    K (Key): 键向量，代表"我有什么"<br>
+                    V (Value): 值向量，代表"实际内容"<br>
+                    d<sub>k</sub>: 键向量维度，用于缩放防止梯度消失</p>
+            </div>
+
+            <h3>Multi-Head Attention</h3>
+            <p>多头注意力将Q、K、V分成多个"头"，每个头独立计算注意力，最后拼接。这允许模型从不同角度捕获信息。</p>
+
+            <div class="flow">
+                <div class="flow-title">注意力计算流程</div>
+                <div class="flow-steps">
+                    <div class="flow-step">输入序列 → Q,K,V</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">计算相似度 QK<sup>T</sup></div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">缩放 + Softmax</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">加权求和 × V</div>
+                </div>
+            </div>
+
+            <h3>Causal Mask（因果掩码）</h3>
+            <p>在自回归生成中，模型只能看到当前位置之前的token，不能"偷看"未来。通过下三角掩码实现。</p>
+        </section>
+
+        <section id="tokenize" class="section">
+            <h2>分词与嵌入</h2>
+
+            <h3>Tokenization（分词）</h3>
+            <p>将文本切分为模型可处理的最小单位（Token），常用算法：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>算法</th>
+                        <th>特点</th>
+                        <th>使用模型</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>BPE</code></td>
+                        <td>字节对编码，基于频率合并</td>
+                        <td>GPT系列</td>
+                    </tr>
+                    <tr>
+                        <td><code>WordPiece</code></td>
+                        <td>类似BPE，最大化似然</td>
+                        <td>BERT</td>
+                    </tr>
+                    <tr>
+                        <td><code>SentencePiece</code></td>
+                        <td>语言无关，直接处理原始文本</td>
+                        <td>LLaMA, T5</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tip"><strong>💡 Token示例</strong>
+                <p style="margin-top:8px">"Hello world" → ["Hello", " world"] (2 tokens)<br>
+                    "你好世界" → ["你", "好", "世", "界"] (4 tokens)<br>
+                    "ChatGPT" → ["Chat", "GPT"] (2 tokens)</p>
+            </div>
+
+            <h3>Embedding（嵌入）</h3>
+            <p>将离散的Token ID映射为连续的向量表示，捕获语义信息。</p>
+            <div class="cards">
+                <div class="card">
+                    <h3>📝 Token Embedding</h3>
+                    <p>词表中每个token对应一个可学习的向量，维度通常为768/1024/4096等</p>
+                </div>
+                <div class="card">
+                    <h3>📍 Position Embedding</h3>
+                    <p>编码token在序列中的位置信息，可以是固定的正弦函数或可学习的向量</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="inference" class="section">
+            <h2>推理过程</h2>
+            <p>大模型生成文本是<strong>自回归</strong>过程，每次只预测一个token，然后将其加入输入，循环进行。</p>
+
+            <div class="flow">
+                <div class="flow-title">自回归生成流程</div>
+                <div class="flow-steps">
+                    <div class="flow-step">输入: "今天天气"</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">预测: "很"</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">输入: "今天天气很"</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">预测: "好"</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">...</div>
+                </div>
+            </div>
+
+            <h3>采样策略</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>作用</th>
+                        <th>建议值</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Temperature</code></td>
+                        <td>控制随机性，越高越随机</td>
+                        <td>0.7-1.0</td>
+                    </tr>
+                    <tr>
+                        <td><code>Top-p (nucleus)</code></td>
+                        <td>只从累积概率前p的token中采样</td>
+                        <td>0.9-0.95</td>
+                    </tr>
+                    <tr>
+                        <td><code>Top-k</code></td>
+                        <td>只从概率最高的k个token中采样</td>
+                        <td>40-50</td>
+                    </tr>
+                    <tr>
+                        <td><code>Repetition Penalty</code></td>
+                        <td>惩罚重复token，减少复读</td>
+                        <td>1.1-1.3</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>KV Cache</h3>
+            <p>在推理时缓存已计算的Key和Value，避免重复计算，显著提升生成速度。这是为什么模型第一个token较慢，后续token更快的原因。</p>
+        </section>
+
+        <section id="context" class="section">
+            <h2>上下文窗口</h2>
+            <p>上下文窗口（Context Window）是模型单次能处理的最大token数量。</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>模型</th>
+                        <th>上下文长度</th>
+                        <th>约等于</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GPT-3.5</td>
+                        <td>4K / 16K tokens</td>
+                        <td>~3K-12K 汉字</td>
+                    </tr>
+                    <tr>
+                        <td>GPT-4</td>
+                        <td>8K / 128K tokens</td>
+                        <td>~6K-100K 汉字</td>
+                    </tr>
+                    <tr>
+                        <td>Claude 3</td>
+                        <td>200K tokens</td>
+                        <td>~150K 汉字</td>
+                    </tr>
+                    <tr>
+                        <td>Gemini 1.5</td>
+                        <td>1M tokens</td>
+                        <td>~750K 汉字</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>📖 上下文包含</h3>
+                    <ul>
+                        <li>系统提示词 (System Prompt)</li>
+                        <li>历史对话 (Chat History)</li>
+                        <li>当前用户输入</li>
+                        <li>模型的输出</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚠️ 超出限制</h3>
+                    <ul>
+                        <li>早期内容被截断</li>
+                        <li>模型"遗忘"上下文</li>
+                        <li>需要总结或分块处理</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="limits" class="section">
+            <h2>能力边界</h2>
+            <div class="cards">
+                <div class="card">
+                    <h3>✅ 擅长</h3>
+                    <ul>
+                        <li>语言理解与生成</li>
+                        <li>模式识别与转换</li>
+                        <li>基于已知知识推理</li>
+                        <li>代码编写与解释</li>
+                        <li>创意写作</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>❌ 局限</h3>
+                    <ul>
+                        <li>知识截止日期限制</li>
+                        <li>可能产生幻觉</li>
+                        <li>复杂数学推理不可靠</li>
+                        <li>无法执行真实操作</li>
+                        <li>无法记住对话历史</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🔮 本质理解</h3>
+                    <p>LLM是"概率性的下一个token预测器"，通过统计模式生成看起来合理的文本，并非真正"理解"或"思考"。</p>
+                </div>
+            </div>
+
+            <div class="tip"><strong>🎯 关键认知</strong>
+                <p style="margin-top:8px">大模型的输出是基于概率分布的采样结果，同样的输入可能产生不同输出。模型不会记住之前的对话（除非作为上下文传入），每次调用都是独立的。</p>
+            </div>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>

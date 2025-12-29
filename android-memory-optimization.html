@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android内存优化指南 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --red: #f85149;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(210, 153, 34, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--red), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--red), var(--orange));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--orange)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--orange);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--orange);
+            margin-bottom: 12px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(210, 153, 34, 0.1);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.danger {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: rgba(248, 81, 73, 0.3)
+        }
+
+        .tip.success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--orange)
+        }
+
+        .tip.danger strong {
+            color: var(--red)
+        }
+
+        .tip.success strong {
+            color: var(--green)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--orange)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 26px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">内存概述</a><a href="#leak">内存泄漏</a><a href="#oom">OOM分析</a><a
+            href="#bitmap">Bitmap优化</a><a href="#object">对象优化</a><a href="#tools">检测工具</a><a href="#gc">GC优化</a><a
+            href="#checklist">优化清单</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>💾 Android内存优化指南</h1>
+            <p>Memory Optimization - 打造流畅稳定的应用</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>Android 内存概述</h2>
+            <p>Android为每个应用分配有限的堆内存，超出限制会触发OOM崩溃。合理管理内存是App稳定性的关键。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>📊 内存区域</h3>
+                    <ul>
+                        <li><strong>Java Heap</strong>: 对象实例</li>
+                        <li><strong>Native Heap</strong>: Native代码分配</li>
+                        <li><strong>Code</strong>: 代码和资源</li>
+                        <li><strong>Stack</strong>: 线程栈</li>
+                        <li><strong>Graphics</strong>: 图形缓冲</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📈 内存限制</h3>
+                    <ul>
+                        <li>普通应用: 128-512MB</li>
+                        <li>largeHeap: 256-1024MB</li>
+                        <li>由设备和ROM决定</li>
+                        <li><code>Runtime.maxMemory()</code></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>⚠️ 常见问题</h3>
+                    <ul>
+                        <li>内存泄漏 (Memory Leak)</li>
+                        <li>内存抖动 (Memory Churn)</li>
+                        <li>大对象分配</li>
+                        <li>Bitmap占用过高</li>
+                    </ul>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// 获取内存信息</span>
+<span class="keyword">val</span> runtime = Runtime.getRuntime()
+<span class="keyword">val</span> maxMemory = runtime.maxMemory() / 1024 / 1024  <span class="comment">// 最大可用MB</span>
+<span class="keyword">val</span> totalMemory = runtime.totalMemory() / 1024 / 1024  <span class="comment">// 当前已分配</span>
+<span class="keyword">val</span> freeMemory = runtime.freeMemory() / 1024 / 1024   <span class="comment">// 当前空闲</span>
+
+<span class="comment">// 获取更详细的内存信息</span>
+<span class="keyword">val</span> activityManager = getSystemService(ACTIVITY_SERVICE) <span class="keyword">as</span> ActivityManager
+<span class="keyword">val</span> memoryInfo = ActivityManager.MemoryInfo()
+activityManager.getMemoryInfo(memoryInfo)
+<span class="comment">// memoryInfo.availMem, memoryInfo.totalMem, memoryInfo.lowMemory</span></code></pre>
+        </section>
+
+        <section id="leak" class="section">
+            <h2>内存泄漏 Memory Leak</h2>
+            <p>内存泄漏是指对象不再使用但无法被GC回收，持续累积最终导致OOM。</p>
+
+            <h3>常见泄漏场景</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>原因</th>
+                        <th>解决方案</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>静态变量持有Activity</td>
+                        <td>static引用阻止GC</td>
+                        <td>使用WeakReference或及时置空</td>
+                    </tr>
+                    <tr>
+                        <td>非静态内部类</td>
+                        <td>隐式持有外部类引用</td>
+                        <td>改为静态内部类+WeakReference</td>
+                    </tr>
+                    <tr>
+                        <td>Handler消息未移除</td>
+                        <td>MessageQueue持有Handler</td>
+                        <td>onDestroy中removeCallbacksAndMessages</td>
+                    </tr>
+                    <tr>
+                        <td>未注销监听器</td>
+                        <td>系统持有回调引用</td>
+                        <td>在对应生命周期注销</td>
+                    </tr>
+                    <tr>
+                        <td>单例持有Context</td>
+                        <td>Application Context以外的Context</td>
+                        <td>使用ApplicationContext</td>
+                    </tr>
+                    <tr>
+                        <td>资源未关闭</td>
+                        <td>Cursor、Stream等未close</td>
+                        <td>使用use{}或try-finally关闭</td>
+                    </tr>
+                    <tr>
+                        <td>动画未取消</td>
+                        <td>属性动画持有View</td>
+                        <td>onDestroy中cancel动画</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>典型泄漏代码 vs 修复</h3>
+            <pre><code><span class="comment">// ❌ 错误：非静态Handler导致泄漏</span>
+<span class="keyword">class</span> MainActivity : AppCompatActivity() {
+    <span class="keyword">private val</span> handler = <span class="keyword">object</span> : Handler(Looper.getMainLooper()) {
+        <span class="keyword">override fun</span> handleMessage(msg: Message) {
+            <span class="comment">// 隐式持有MainActivity引用</span>
+        }
+    }
+}
+
+<span class="comment">// ✅ 正确：静态内部类 + WeakReference</span>
+<span class="keyword">class</span> MainActivity : AppCompatActivity() {
+    <span class="keyword">private class</span> SafeHandler(activity: MainActivity) : Handler(Looper.getMainLooper()) {
+        <span class="keyword">private val</span> weakActivity = WeakReference(activity)
+        <span class="keyword">override fun</span> handleMessage(msg: Message) {
+            weakActivity.get()?.handleMsg(msg)
+        }
+    }
+    
+    <span class="keyword">private val</span> handler = SafeHandler(<span class="keyword">this</span>)
+    
+    <span class="keyword">override fun</span> onDestroy() {
+        handler.removeCallbacksAndMessages(<span class="keyword">null</span>)
+        <span class="keyword">super</span>.onDestroy()
+    }
+}</code></pre>
+
+            <div class="tip danger"><strong>🚨 最危险的泄漏</strong>
+                <p style="margin-top:8px">Activity/Fragment泄漏最严重，因为它们持有整个View树和大量资源。单个Activity泄漏可能导致几十MB内存无法回收。</p>
+            </div>
+        </section>
+
+        <section id="oom" class="section">
+            <h2>OOM 分析与预防</h2>
+            <p>OutOfMemoryError表示堆内存不足以分配新对象，需要分析堆转储定位问题。</p>
+
+            <h3>OOM 类型</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3>📦 Java Heap OOM</h3>
+                    <p>Java对象分配超出maxMemory限制<br><code>java.lang.OutOfMemoryError: Java heap space</code></p>
+                </div>
+                <div class="card">
+                    <h3">🔢 线程创建OOM</h3>
+                        <p>创建过多线程耗尽内存/FD<br><code>pthread_create failed</code></p>
+                </div>
+                <div class="card">
+                    <h3">📁 FD耗尽</h3>
+                        <p>文件描述符超限<br><code>Too many open files</code></p>
+                </div>
+            </div>
+
+            <h3>预防措施</h3>
+            <pre><code><span class="comment">// 1. 监听低内存警告</span>
+<span class="keyword">class</span> MyApp : Application(), ComponentCallbacks2 {
+    <span class="keyword">override fun</span> onTrimMemory(level: Int) {
+        <span class="keyword">when</span> (level) {
+            TRIM_MEMORY_RUNNING_LOW -> clearCaches()
+            TRIM_MEMORY_UI_HIDDEN -> releaseUIResources()
+            TRIM_MEMORY_COMPLETE -> releaseAllCaches()
+        }
+    }
+}
+
+<span class="comment">// 2. 图片加载设置内存缓存上限</span>
+Glide.with(context)
+    .setMemoryCategory(MemoryCategory.LOW)
+
+<span class="comment">// 3. 大对象分配前检查</span>
+<span class="keyword">fun</span> canAllocate(bytes: Long): Boolean {
+    <span class="keyword">val</span> runtime = Runtime.getRuntime()
+    <span class="keyword">return</span> runtime.freeMemory() + 
+           (runtime.maxMemory() - runtime.totalMemory()) > bytes
+}</code></pre>
+        </section>
+
+        <section id="bitmap" class="section">
+            <h2>Bitmap 内存优化</h2>
+            <p>Bitmap是内存大户，一张1080x1920的ARGB_8888图片占用约8MB内存。</p>
+
+            <h3>Bitmap内存计算</h3>
+            <pre><code><span class="comment">// 内存 = 宽 × 高 × 每像素字节数</span>
+<span class="comment">// ARGB_8888: 4 bytes/pixel</span>
+<span class="comment">// RGB_565:   2 bytes/pixel</span>
+<span class="comment">// ALPHA_8:   1 byte/pixel</span>
+
+1080 × 1920 × 4 = 8,294,400 bytes ≈ <span class="string">8MB</span></code></pre>
+
+            <h3>优化策略</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>策略</th>
+                        <th>方法</th>
+                        <th>效果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>降采样</td>
+                        <td>inSampleSize=2</td>
+                        <td>内存减少75%</td>
+                    </tr>
+                    <tr>
+                        <td>颜色格式</td>
+                        <td>RGB_565替代ARGB_8888</td>
+                        <td>内存减少50%</td>
+                    </tr>
+                    <tr>
+                        <td>复用Bitmap</td>
+                        <td>inBitmap复用内存</td>
+                        <td>减少GC</td>
+                    </tr>
+                    <tr>
+                        <td>按需加载</td>
+                        <td>只加载可见区域</td>
+                        <td>大图分块</td>
+                    </tr>
+                    <tr>
+                        <td>及时回收</td>
+                        <td>bitmap.recycle()</td>
+                        <td>主动释放</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// 计算合适的inSampleSize</span>
+<span class="keyword">fun</span> calculateInSampleSize(options: BitmapFactory.Options, 
+                           reqWidth: Int, reqHeight: Int): Int {
+    <span class="keyword">val</span> height = options.outHeight
+    <span class="keyword">val</span> width = options.outWidth
+    <span class="keyword">var</span> inSampleSize = 1
+    
+    <span class="keyword">if</span> (height > reqHeight || width > reqWidth) {
+        <span class="keyword">val</span> halfHeight = height / 2
+        <span class="keyword">val</span> halfWidth = width / 2
+        <span class="keyword">while</span> ((halfHeight / inSampleSize) >= reqHeight &&
+               (halfWidth / inSampleSize) >= reqWidth) {
+            inSampleSize *= 2
+        }
+    }
+    <span class="keyword">return</span> inSampleSize
+}
+
+<span class="comment">// 使用inSampleSize加载</span>
+<span class="keyword">val</span> options = BitmapFactory.Options().apply {
+    inJustDecodeBounds = <span class="keyword">true</span>  <span class="comment">// 只读尺寸</span>
+}
+BitmapFactory.decodeResource(res, resId, options)
+options.inSampleSize = calculateInSampleSize(options, reqW, reqH)
+options.inJustDecodeBounds = <span class="keyword">false</span>
+<span class="keyword">val</span> bitmap = BitmapFactory.decodeResource(res, resId, options)</code></pre>
+
+            <div class="tip success"><strong>✅ 使用图片加载库</strong>
+                <p style="margin-top:8px">Glide/Coil/Picasso等库已内置采样、缓存、复用等优化，优先使用成熟库而非手动处理。</p>
+            </div>
+        </section>
+
+        <section id="object" class="section">
+            <h2>对象与集合优化</h2>
+
+            <h3>减少对象创建</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3">♻️ 对象池</h3>
+                        <p>Message.obtain()、Pools.acquire()复用对象，避免频繁创建</p>
+                </div>
+                <div class="card">
+                    <h3">📦 基本类型优先</h3>
+                        <p>用int替代Integer，用LongSparseArray替代HashMap&lt;Long,Object&gt;</p>
+                </div>
+                <div class="card">
+                    <h3">⚡ 避免装箱</h3>
+                        <p>使用SparseArray、SparseBooleanArray等避免自动装箱</p>
+                </div>
+            </div>
+
+            <h3>集合选择</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐</th>
+                        <th>避免</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>int→Object映射</td>
+                        <td>SparseArray</td>
+                        <td>HashMap&lt;Integer,Object&gt;</td>
+                    </tr>
+                    <tr>
+                        <td>int→int映射</td>
+                        <td>SparseIntArray</td>
+                        <td>HashMap&lt;Integer,Integer&gt;</td>
+                    </tr>
+                    <tr>
+                        <td>long→Object映射</td>
+                        <td>LongSparseArray</td>
+                        <td>HashMap&lt;Long,Object&gt;</td>
+                    </tr>
+                    <tr>
+                        <td>小数据集合</td>
+                        <td>ArrayMap</td>
+                        <td>HashMap</td>
+                    </tr>
+                    <tr>
+                        <td>小数据Set</td>
+                        <td>ArraySet</td>
+                        <td>HashSet</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// ❌ 产生大量临时对象</span>
+<span class="keyword">for</span> (i <span class="keyword">in</span> 0..1000) {
+    <span class="keyword">val</span> point = Point(x, y)  <span class="comment">// 每次循环新建对象</span>
+}
+
+<span class="comment">// ✅ 复用对象</span>
+<span class="keyword">val</span> point = Point()
+<span class="keyword">for</span> (i <span class="keyword">in</span> 0..1000) {
+    point.set(x, y)  <span class="comment">// 复用同一个对象</span>
+}
+
+<span class="comment">// ❌ 字符串拼接创建临时对象</span>
+<span class="keyword">var</span> str = <span class="string">""</span>
+<span class="keyword">for</span> (i <span class="keyword">in</span> 0..100) {
+    str += i.toString()  <span class="comment">// 每次创建新String</span>
+}
+
+<span class="comment">// ✅ 使用StringBuilder</span>
+<span class="keyword">val</span> sb = StringBuilder()
+<span class="keyword">for</span> (i <span class="keyword">in</span> 0..100) {
+    sb.append(i)
+}</code></pre>
+        </section>
+
+        <section id="tools" class="section">
+            <h2>内存检测工具</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>工具</th>
+                        <th>用途</th>
+                        <th>使用场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Android Studio Profiler</strong></td>
+                        <td>实时内存监控、堆转储</td>
+                        <td>开发调试</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LeakCanary</strong></td>
+                        <td>自动检测内存泄漏</td>
+                        <td>开发阶段必备</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MAT (Memory Analyzer)</strong></td>
+                        <td>分析hprof堆转储</td>
+                        <td>定位疑难泄漏</td>
+                    </tr>
+                    <tr>
+                        <td><strong>adb shell dumpsys meminfo</strong></td>
+                        <td>命令行查看内存</td>
+                        <td>快速检查</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Perfetto</strong></td>
+                        <td>系统级内存追踪</td>
+                        <td>深度分析</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>LeakCanary 集成</h3>
+            <pre><code><span class="comment">// build.gradle</span>
+dependencies {
+    debugImplementation <span class="string">'com.squareup.leakcanary:leakcanary-android:2.12'</span>
+}
+
+<span class="comment">// 无需其他配置，自动检测Activity/Fragment泄漏</span>
+<span class="comment">// 泄漏时会弹出通知，点击查看泄漏链</span></code></pre>
+
+            <h3>adb 命令</h3>
+            <pre><code><span class="comment"># 查看应用内存信息</span>
+adb shell dumpsys meminfo com.example.app
+
+<span class="comment"># 触发GC</span>
+adb shell am force-gc com.example.app
+
+<span class="comment"># 获取堆转储</span>
+adb shell am dumpheap com.example.app /data/local/tmp/heap.hprof
+adb pull /data/local/tmp/heap.hprof</code></pre>
+        </section>
+
+        <section id="gc" class="section">
+            <h2>GC 优化</h2>
+            <p>频繁GC（内存抖动）会造成卡顿，应减少短生命周期对象的创建。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">🔍 识别内存抖动</h3>
+                        <p>Profiler中看到锯齿状内存曲线，伴随频繁GC事件</p>
+                </div>
+                <div class="card">
+                    <h3">❌ 典型原因</h3>
+                        <p>循环内创建对象、onDraw中new对象、字符串拼接</p>
+                </div>
+                <div class="card">
+                    <h3">✅ 解决方案</h3>
+                        <p>对象复用、对象池、避免在热点路径分配</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// ❌ onDraw中创建对象导致内存抖动</span>
+<span class="keyword">override fun</span> onDraw(canvas: Canvas) {
+    <span class="keyword">val</span> paint = Paint()  <span class="comment">// 每帧创建新Paint！</span>
+    <span class="keyword">val</span> rect = Rect()    <span class="comment">// 每帧创建新Rect！</span>
+    canvas.drawRect(rect, paint)
+}
+
+<span class="comment">// ✅ 成员变量复用</span>
+<span class="keyword">private val</span> paint = Paint()
+<span class="keyword">private val</span> rect = Rect()
+
+<span class="keyword">override fun</span> onDraw(canvas: Canvas) {
+    rect.set(0, 0, width, height)
+    canvas.drawRect(rect, paint)
+}</code></pre>
+        </section>
+
+        <section id="checklist" class="section">
+            <h2>优化检查清单</h2>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">🔍 开发阶段</h3>
+                        <ul>
+                            <li>✅ 集成LeakCanary</li>
+                            <li>✅ 定期Profiler检查</li>
+                            <li>✅ 代码Review关注内存</li>
+                            <li>✅ 大图按需加载</li>
+                        </ul>
+                </div>
+                <div class="card">
+                    <h3">📱 Activity/Fragment</h3>
+                        <ul>
+                            <li>✅ 避免静态持有</li>
+                            <li>✅ onDestroy清理资源</li>
+                            <li>✅ Handler使用弱引用</li>
+                            <li>✅ 注销所有监听</li>
+                        </ul>
+                </div>
+                <div class="card">
+                    <h3">🖼️ 图片处理</h3>
+                        <ul>
+                            <li>✅ 使用Glide/Coil</li>
+                            <li>✅ 适当降采样</li>
+                            <li>✅ 考虑RGB_565</li>
+                            <li>✅ 及时释放Bitmap</li>
+                        </ul>
+                </div>
+                <div class="card">
+                    <h3">⚡ 性能优化</h3>
+                        <ul>
+                            <li>✅ 避免onDraw分配</li>
+                            <li>✅ 使用对象池</li>
+                            <li>✅ SparseArray替代HashMap</li>
+                            <li>✅ StringBuilder拼接</li>
+                        </ul>
+                </div>
+            </div>
+
+            <div class="tip"><strong>📊 内存优化目标</strong>
+                <p style="margin-top:8px">• 应用内存 < maxMemory的70%<br>
+                        • 无内存泄漏（LeakCanary零报警）<br>
+                        • GC频率 < 1次/秒<br>
+                            • 内存曲线平稳无锯齿</p>
+            </div>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>

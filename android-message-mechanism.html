@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android消息机制快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --red: #f85149;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(88, 166, 255, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--green), var(--blue));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--blue)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .type {
+            color: var(--cyan)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--green);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--green);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .card p {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px;
+            font-size: 13px;
+            color: var(--text2)
+        }
+
+        .tip {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.warn {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: rgba(210, 153, 34, 0.3)
+        }
+
+        .tip.success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px
+        }
+
+        .flow {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0
+        }
+
+        .flow-title {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px
+        }
+
+        .flow-step {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500
+        }
+
+        .flow-arrow {
+            color: var(--green);
+            font-size: 20px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--green)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 28px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .flow-steps {
+                flex-direction: column
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">核心概念</a><a href="#handler">Handler</a><a href="#looper">Looper</a><a
+            href="#queue">MessageQueue</a><a href="#message">Message</a><a href="#flow">消息流转</a><a
+            href="#thread">线程通信</a><a href="#practice">最佳实践</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>📱 Android消息机制</h1>
+            <p>Handler / Looper / MessageQueue 核心原理与使用指南</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>核心概念</h2>
+            <p>Android消息机制是Android系统中实现线程间通信的核心机制，主要由<strong>Handler</strong>、<strong>Looper</strong>、<strong>MessageQueue</strong>、<strong>Message</strong>四个组件组成。
+            </p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>📨 Handler</h3>
+                    <p>消息的发送者和处理者</p>
+                    <ul>
+                        <li>发送消息到MessageQueue</li>
+                        <li>处理Looper分发的消息</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🔄 Looper</h3>
+                    <p>消息循环器</p>
+                    <ul>
+                        <li>不断从MessageQueue取消息</li>
+                        <li>将消息分发给对应Handler</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📬 MessageQueue</h3>
+                    <p>消息队列</p>
+                    <ul>
+                        <li>存储待处理的Message</li>
+                        <li>按时间顺序排列（单链表）</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>✉️ Message</h3>
+                    <p>消息载体</p>
+                    <ul>
+                        <li>携带数据（what, obj, arg1, arg2）</li>
+                        <li>记录目标Handler和执行时间</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flow">
+                <div class="flow-title">消息机制工作流程</div>
+                <div class="flow-steps">
+                    <div class="flow-step">Handler发送Message</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">Message入队MessageQueue</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">Looper循环取出Message</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">Handler处理Message</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="handler" class="section">
+            <h2>Handler 详解</h2>
+            <h3>创建Handler</h3>
+            <pre><code><span class="comment">// 方式1: 在主线程直接创建（关联主线程Looper）</span>
+<span class="keyword">val</span> handler = <span class="type">Handler</span>(<span class="type">Looper</span>.getMainLooper()) { msg ->
+    <span class="comment">// 处理消息</span>
+    <span class="keyword">true</span>
+}
+
+<span class="comment">// 方式2: 使用Handler构造函数（已废弃，但仍常见）</span>
+<span class="keyword">val</span> handler = <span class="keyword">object</span> : <span class="type">Handler</span>() {
+    <span class="keyword">override fun</span> handleMessage(msg: <span class="type">Message</span>) {
+        <span class="keyword">when</span> (msg.what) {
+            <span class="string">1</span> -> <span class="comment">// 处理消息类型1</span>
+            <span class="string">2</span> -> <span class="comment">// 处理消息类型2</span>
+        }
+    }
+}
+
+<span class="comment">// 方式3: 推荐 - 指定Looper避免内存泄漏警告</span>
+<span class="keyword">val</span> handler = <span class="type">Handler</span>(<span class="type">Looper</span>.getMainLooper())</code></pre>
+
+            <h3>发送消息的方式</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>方法</th>
+                        <th>说明</th>
+                        <th>使用场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>sendMessage(msg)</code></td>
+                        <td>发送Message对象</td>
+                        <td>传递复杂数据</td>
+                    </tr>
+                    <tr>
+                        <td><code>sendEmptyMessage(what)</code></td>
+                        <td>发送空消息</td>
+                        <td>仅需标识，无数据</td>
+                    </tr>
+                    <tr>
+                        <td><code>sendMessageDelayed(msg, delay)</code></td>
+                        <td>延迟发送</td>
+                        <td>定时任务</td>
+                    </tr>
+                    <tr>
+                        <td><code>sendMessageAtTime(msg, time)</code></td>
+                        <td>指定时间发送</td>
+                        <td>精确定时</td>
+                    </tr>
+                    <tr>
+                        <td><code>post(runnable)</code></td>
+                        <td>发送Runnable</td>
+                        <td>简单任务</td>
+                    </tr>
+                    <tr>
+                        <td><code>postDelayed(runnable, delay)</code></td>
+                        <td>延迟执行Runnable</td>
+                        <td>延迟UI操作</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// 发送Message</span>
+<span class="keyword">val</span> msg = <span class="type">Message</span>.obtain().apply {
+    what = <span class="string">1</span>
+    arg1 = <span class="string">100</span>
+    obj = <span class="string">"Hello"</span>
+}
+handler.sendMessage(msg)
+
+<span class="comment">// 发送延迟消息</span>
+handler.sendEmptyMessageDelayed(<span class="string">1</span>, <span class="string">1000</span>) <span class="comment">// 1秒后</span>
+
+<span class="comment">// post Runnable</span>
+handler.post {
+    textView.text = <span class="string">"更新UI"</span>
+}
+
+<span class="comment">// 延迟执行</span>
+handler.postDelayed({
+    showToast(<span class="string">"延迟显示"</span>)
+}, <span class="string">2000</span>)</code></pre>
+        </section>
+
+        <section id="looper" class="section">
+            <h2>Looper 详解</h2>
+            <p>Looper负责不断循环从MessageQueue中取出消息，并分发给对应的Handler处理。每个线程最多只能有一个Looper。</p>
+
+            <h3>核心API</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>方法</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Looper.prepare()</code></td>
+                        <td>为当前线程创建Looper</td>
+                    </tr>
+                    <tr>
+                        <td><code>Looper.loop()</code></td>
+                        <td>开始消息循环（阻塞）</td>
+                    </tr>
+                    <tr>
+                        <td><code>Looper.myLooper()</code></td>
+                        <td>获取当前线程的Looper</td>
+                    </tr>
+                    <tr>
+                        <td><code>Looper.getMainLooper()</code></td>
+                        <td>获取主线程Looper</td>
+                    </tr>
+                    <tr>
+                        <td><code>looper.quit()</code></td>
+                        <td>退出循环（不安全）</td>
+                    </tr>
+                    <tr>
+                        <td><code>looper.quitSafely()</code></td>
+                        <td>安全退出（处理完已有消息）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>在子线程使用Looper</h3>
+            <pre><code><span class="comment">// 手动创建带Looper的线程</span>
+<span class="type">Thread</span> {
+    <span class="type">Looper</span>.prepare()  <span class="comment">// 1. 创建Looper</span>
+    
+    <span class="keyword">val</span> handler = <span class="type">Handler</span>(<span class="type">Looper</span>.myLooper()!!) { msg ->
+        <span class="comment">// 在此线程处理消息</span>
+        <span class="keyword">true</span>
+    }
+    
+    <span class="type">Looper</span>.loop()  <span class="comment">// 2. 开始循环（阻塞在此）</span>
+}.start()
+
+<span class="comment">// 推荐: 使用 HandlerThread</span>
+<span class="keyword">val</span> handlerThread = <span class="type">HandlerThread</span>(<span class="string">"MyThread"</span>)
+handlerThread.start()
+<span class="keyword">val</span> handler = <span class="type">Handler</span>(handlerThread.looper)</code></pre>
+
+            <div class="tip warn"><strong>⚠️
+                    注意</strong>主线程的Looper由系统在ActivityThread.main()中自动创建，无需手动调用prepare()。子线程必须先调用prepare()再调用loop()。
+            </div>
+        </section>
+
+        <section id="queue" class="section">
+            <h2>MessageQueue 详解</h2>
+            <p>MessageQueue是一个按消息执行时间排序的单链表结构，内部通过native方法实现阻塞/唤醒机制。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>📥 enqueueMessage</h3>
+                    <p>插入消息到队列，按when时间排序，插入后唤醒阻塞的next()方法</p>
+                </div>
+                <div class="card">
+                    <h3>📤 next()</h3>
+                    <p>取出下一条消息，如果没有消息会阻塞（通过native的epoll机制）</p>
+                </div>
+                <div class="card">
+                    <h3>🚫 removeMessages</h3>
+                    <p>移除指定what或Runnable的消息，用于取消待执行任务</p>
+                </div>
+                <div class="card">
+                    <h3>🔌 IdleHandler</h3>
+                    <p>消息队列空闲时的回调，适合执行低优先级任务</p>
+                </div>
+            </div>
+
+            <h3>IdleHandler 使用</h3>
+            <pre><code><span class="comment">// 添加 IdleHandler - 在消息队列空闲时执行</span>
+<span class="type">Looper</span>.myQueue().addIdleHandler {
+    <span class="comment">// 执行空闲任务，如：预加载、统计上报等</span>
+    doIdleWork()
+    <span class="keyword">false</span>  <span class="comment">// false=执行一次后移除, true=保持</span>
+}</code></pre>
+        </section>
+
+        <section id="message" class="section">
+            <h2>Message 详解</h2>
+            <h3>Message 属性</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>属性</th>
+                        <th>类型</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>what</code></td>
+                        <td>int</td>
+                        <td>消息标识码</td>
+                    </tr>
+                    <tr>
+                        <td><code>arg1, arg2</code></td>
+                        <td>int</td>
+                        <td>简单整数参数</td>
+                    </tr>
+                    <tr>
+                        <td><code>obj</code></td>
+                        <td>Object</td>
+                        <td>任意对象数据</td>
+                    </tr>
+                    <tr>
+                        <td><code>data</code></td>
+                        <td>Bundle</td>
+                        <td>复杂数据容器</td>
+                    </tr>
+                    <tr>
+                        <td><code>target</code></td>
+                        <td>Handler</td>
+                        <td>目标Handler</td>
+                    </tr>
+                    <tr>
+                        <td><code>when</code></td>
+                        <td>long</td>
+                        <td>执行时间</td>
+                    </tr>
+                    <tr>
+                        <td><code>callback</code></td>
+                        <td>Runnable</td>
+                        <td>post的Runnable</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>创建Message（推荐使用obtain复用）</h3>
+            <pre><code><span class="comment">// ✅ 推荐: 从对象池获取，避免频繁创建</span>
+<span class="keyword">val</span> msg = <span class="type">Message</span>.obtain()
+<span class="keyword">val</span> msg = <span class="type">Message</span>.obtain(handler, what, arg1, arg2, obj)
+<span class="keyword">val</span> msg = handler.obtainMessage(what)
+
+<span class="comment">// ❌ 不推荐: 直接new</span>
+<span class="keyword">val</span> msg = <span class="type">Message</span>()  <span class="comment">// 浪费内存</span></code></pre>
+
+            <div class="tip success"><strong>💡
+                    Message对象池</strong>Message内部维护了一个大小为50的对象池（单链表），通过obtain()获取复用对象，recycle()回收。系统会自动回收处理完的Message。
+            </div>
+        </section>
+
+        <section id="flow" class="section">
+            <h2>消息处理流程</h2>
+            <h3>dispatchMessage 处理顺序</h3>
+            <pre><code><span class="keyword">public void</span> dispatchMessage(<span class="type">Message</span> msg) {
+    <span class="comment">// 1. 优先执行 Message.callback (post的Runnable)</span>
+    <span class="keyword">if</span> (msg.callback != <span class="keyword">null</span>) {
+        handleCallback(msg);
+    } <span class="keyword">else</span> {
+        <span class="comment">// 2. 其次执行 Handler.mCallback</span>
+        <span class="keyword">if</span> (mCallback != <span class="keyword">null</span>) {
+            <span class="keyword">if</span> (mCallback.handleMessage(msg)) {
+                <span class="keyword">return</span>;
+            }
+        }
+        <span class="comment">// 3. 最后执行 handleMessage()</span>
+        handleMessage(msg);
+    }
+}</code></pre>
+
+            <div class="flow">
+                <div class="flow-title">消息处理优先级</div>
+                <div class="flow-steps">
+                    <div class="flow-step">1️⃣ Message.callback</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">2️⃣ Handler.Callback</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">3️⃣ handleMessage()</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="thread" class="section">
+            <h2>线程间通信</h2>
+            <h3>子线程更新UI</h3>
+            <pre><code><span class="comment">// 方式1: 主线程Handler</span>
+<span class="keyword">val</span> mainHandler = <span class="type">Handler</span>(<span class="type">Looper</span>.getMainLooper())
+<span class="type">Thread</span> {
+    <span class="keyword">val</span> result = doBackground()
+    mainHandler.post {
+        textView.text = result  <span class="comment">// 更新UI</span>
+    }
+}.start()
+
+<span class="comment">// 方式2: Activity.runOnUiThread()</span>
+<span class="type">Thread</span> {
+    <span class="keyword">val</span> result = doBackground()
+    runOnUiThread {
+        textView.text = result
+    }
+}.start()
+
+<span class="comment">// 方式3: View.post()</span>
+<span class="type">Thread</span> {
+    <span class="keyword">val</span> result = doBackground()
+    textView.post {
+        textView.text = result
+    }
+}.start()</code></pre>
+
+            <h3>HandlerThread 使用</h3>
+            <pre><code><span class="comment">// 创建带Looper的后台线程</span>
+<span class="keyword">class</span> <span class="type">MyService</span> : <span class="type">Service</span>() {
+    <span class="keyword">private lateinit var</span> handlerThread: <span class="type">HandlerThread</span>
+    <span class="keyword">private lateinit var</span> serviceHandler: <span class="type">Handler</span>
+
+    <span class="keyword">override fun</span> onCreate() {
+        handlerThread = <span class="type">HandlerThread</span>(<span class="string">"ServiceThread"</span>)
+        handlerThread.start()
+        serviceHandler = <span class="type">Handler</span>(handlerThread.looper) { msg ->
+            <span class="comment">// 在后台线程处理任务</span>
+            <span class="keyword">true</span>
+        }
+    }
+
+    <span class="keyword">override fun</span> onDestroy() {
+        handlerThread.quitSafely()  <span class="comment">// 安全退出</span>
+    }
+}</code></pre>
+        </section>
+
+        <section id="practice" class="section">
+            <h2>最佳实践</h2>
+            <div class="cards">
+                <div class="card">
+                    <h3>🚫 避免内存泄漏</h3>
+                    <p>使用静态内部类+WeakReference，或在onDestroy中调用removeCallbacksAndMessages(null)</p>
+                </div>
+                <div class="card">
+                    <h3>♻️ Message复用</h3>
+                    <p>始终使用Message.obtain()或handler.obtainMessage()获取Message对象</p>
+                </div>
+                <div class="card">
+                    <h3>🛡️ 指定Looper</h3>
+                    <p>创建Handler时明确指定Looper，避免隐式使用当前线程Looper</p>
+                </div>
+                <div class="card">
+                    <h3>🔚 及时退出</h3>
+                    <p>子线程Looper使用完毕后调用quitSafely()释放资源</p>
+                </div>
+            </div>
+
+            <h3>避免内存泄漏的正确写法</h3>
+            <pre><code><span class="keyword">class</span> <span class="type">MyActivity</span> : <span class="type">AppCompatActivity</span>() {
+    
+    <span class="comment">// 静态内部类 + WeakReference</span>
+    <span class="keyword">private class</span> <span class="type">MyHandler</span>(activity: <span class="type">MyActivity</span>) : <span class="type">Handler</span>(<span class="type">Looper</span>.getMainLooper()) {
+        <span class="keyword">private val</span> weakActivity = <span class="type">WeakReference</span>(activity)
+        
+        <span class="keyword">override fun</span> handleMessage(msg: <span class="type">Message</span>) {
+            weakActivity.get()?.handleMsg(msg)
+        }
+    }
+    
+    <span class="keyword">private val</span> handler = <span class="type">MyHandler</span>(<span class="keyword">this</span>)
+    
+    <span class="keyword">override fun</span> onDestroy() {
+        <span class="keyword">super</span>.onDestroy()
+        handler.removeCallbacksAndMessages(<span class="keyword">null</span>)  <span class="comment">// 清除所有消息</span>
+    }
+}</code></pre>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>

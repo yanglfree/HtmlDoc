@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android多线程技术 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(163, 113, 247, 0.15), rgba(57, 197, 207, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--purple), var(--cyan));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--purple)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--purple);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--purple);
+            margin-bottom: 12px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(163, 113, 247, 0.1);
+            border: 1px solid rgba(163, 113, 247, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.warn {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: rgba(210, 153, 34, 0.3)
+        }
+
+        .tip.success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--purple)
+        }
+
+        .tip.warn strong {
+            color: var(--orange)
+        }
+
+        .tip.success strong {
+            color: var(--green)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--purple)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 26px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">概览</a><a href="#thread">Thread基础</a><a href="#handler">Handler机制</a><a
+            href="#executor">线程池</a><a href="#asynctask">AsyncTask</a><a href="#coroutine">Kotlin协程</a><a
+            href="#rxjava">RxJava</a><a href="#workmanager">WorkManager</a><a href="#compare">技术对比</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🔄 Android多线程技术</h1>
+            <p>Thread · Handler · 线程池 · 协程 · RxJava · WorkManager</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>多线程概览</h2>
+            <p>Android UI操作必须在主线程执行，耗时操作需要放到后台线程，然后切回主线程更新UI。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>🎯 主线程(UI线程)</h3>
+                    <ul>
+                        <li>处理UI渲染和交互</li>
+                        <li>不能执行耗时操作</li>
+                        <li>ANR阈值：5秒</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3">⚙️ 后台线程</h3>
+                        <ul>
+                            <li>执行网络请求、IO操作</li>
+                            <li>不能直接操作UI</li>
+                            <li>需切换回主线程更新UI</li>
+                        </ul>
+                </div>
+                <div class="card">
+                    <h3">🔀 线程通信</h3>
+                        <ul>
+                            <li>Handler/Looper机制</li>
+                            <li>runOnUiThread()</li>
+                            <li>View.post()</li>
+                        </ul>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>技术</th>
+                        <th>适用场景</th>
+                        <th>特点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Thread + Handler</td>
+                        <td>简单的后台任务</td>
+                        <td>基础，需手动管理</td>
+                    </tr>
+                    <tr>
+                        <td>线程池 (Executor)</td>
+                        <td>批量并发任务</td>
+                        <td>复用线程，可控并发</td>
+                    </tr>
+                    <tr>
+                        <td>Kotlin 协程</td>
+                        <td>现代Android开发首选</td>
+                        <td>简洁、结构化并发</td>
+                    </tr>
+                    <tr>
+                        <td>RxJava</td>
+                        <td>复杂数据流处理</td>
+                        <td>响应式编程</td>
+                    </tr>
+                    <tr>
+                        <td>WorkManager</td>
+                        <td>可靠的后台任务</td>
+                        <td>系统调度、支持约束</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="thread" class="section">
+            <h2>Thread 基础</h2>
+
+            <pre><code><span class="comment">// 方式1: 继承Thread</span>
+<span class="keyword">class</span> MyThread : Thread() {
+    <span class="keyword">override fun</span> run() {
+        <span class="comment">// 后台任务</span>
+    }
+}
+MyThread().start()
+
+<span class="comment">// 方式2: 实现Runnable</span>
+Thread {
+    <span class="comment">// 后台任务</span>
+    doBackgroundWork()
+    
+    <span class="comment">// 切回主线程更新UI</span>
+    runOnUiThread {
+        textView.text = <span class="string">"完成"</span>
+    }
+}.start()
+
+<span class="comment">// 使用View.post()切换到主线程</span>
+Thread {
+    <span class="keyword">val</span> result = fetchData()
+    textView.post {
+        textView.text = result
+    }
+}.start()</code></pre>
+
+            <div class="tip warn"><strong>⚠️ 直接使用Thread的问题</strong>
+                <p style="margin-top:8px">• 线程创建销毁开销大<br>• 无法复用线程<br>• 难以管理并发数量<br>• 需手动处理线程通信</p>
+            </div>
+        </section>
+
+        <section id="handler" class="section">
+            <h2>Handler 机制</h2>
+            <p>Handler 是 Android 线程间通信的核心机制，详细原理请参考《Android消息机制》手册。</p>
+
+            <pre><code><span class="comment">// 主线程Handler</span>
+<span class="keyword">private val</span> mainHandler = Handler(Looper.getMainLooper())
+
+<span class="comment">// 后台线程执行任务，结果切回主线程</span>
+Thread {
+    <span class="keyword">val</span> result = doHeavyWork()
+    
+    mainHandler.post {
+        updateUI(result)
+    }
+}.start()
+
+<span class="comment">// HandlerThread - 带Looper的后台线程</span>
+<span class="keyword">val</span> handlerThread = HandlerThread(<span class="string">"BackgroundThread"</span>)
+handlerThread.start()
+
+<span class="keyword">val</span> backgroundHandler = Handler(handlerThread.looper)
+backgroundHandler.post {
+    <span class="comment">// 在后台线程执行</span>
+}
+
+<span class="comment">// 不用时记得退出</span>
+handlerThread.quitSafely()</code></pre>
+        </section>
+
+        <section id="executor" class="section">
+            <h2>线程池 ExecutorService</h2>
+            <p>线程池复用线程，避免频繁创建销毁，可控制并发数量。</p>
+
+            <h3>常用线程池</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>创建方式</th>
+                        <th>特点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>固定大小</td>
+                        <td><code>Executors.newFixedThreadPool(n)</code></td>
+                        <td>固定n个线程</td>
+                    </tr>
+                    <tr>
+                        <td>缓存池</td>
+                        <td><code>Executors.newCachedThreadPool()</code></td>
+                        <td>按需创建，空闲回收</td>
+                    </tr>
+                    <tr>
+                        <td>单线程</td>
+                        <td><code>Executors.newSingleThreadExecutor()</code></td>
+                        <td>单线程顺序执行</td>
+                    </tr>
+                    <tr>
+                        <td>调度池</td>
+                        <td><code>Executors.newScheduledThreadPool(n)</code></td>
+                        <td>定时/周期任务</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// 创建线程池</span>
+<span class="keyword">private val</span> executor = Executors.newFixedThreadPool(4)
+
+<span class="comment">// 提交任务</span>
+executor.execute {
+    <span class="comment">// 后台任务</span>
+    <span class="keyword">val</span> result = fetchData()
+    mainHandler.post { updateUI(result) }
+}
+
+<span class="comment">// 带返回值的任务</span>
+<span class="keyword">val</span> future = executor.submit(Callable {
+    fetchData()
+})
+<span class="keyword">val</span> result = future.get()  <span class="comment">// 阻塞获取结果</span>
+
+<span class="comment">// 自定义线程池（推荐）</span>
+<span class="keyword">val</span> executor = ThreadPoolExecutor(
+    2,                      <span class="comment">// 核心线程数</span>
+    4,                      <span class="comment">// 最大线程数</span>
+    60L, TimeUnit.SECONDS,  <span class="comment">// 空闲超时</span>
+    LinkedBlockingQueue(100),<span class="comment">// 任务队列</span>
+    ThreadFactory { r -> Thread(r, <span class="string">"MyPool"</span>) }
+)
+
+<span class="comment">// 关闭线程池</span>
+executor.shutdown()</code></pre>
+        </section>
+
+        <section id="asynctask" class="section">
+            <h2>AsyncTask（已废弃）</h2>
+            <p>Android 11 (API 30) 开始已废弃，了解即可，新项目请使用协程。</p>
+
+            <pre><code><span class="comment">// ❌ 已废弃，仅作参考</span>
+<span class="keyword">class</span> MyTask : AsyncTask&lt;String, Int, String&gt;() {
+    <span class="keyword">override fun</span> doInBackground(vararg params: String): String {
+        <span class="comment">// 后台线程执行</span>
+        <span class="keyword">for</span> (i <span class="keyword">in</span> 0..100) {
+            publishProgress(i)  <span class="comment">// 更新进度</span>
+        }
+        <span class="keyword">return</span> <span class="string">"结果"</span>
+    }
+    
+    <span class="keyword">override fun</span> onProgressUpdate(vararg values: Int) {
+        <span class="comment">// 主线程更新进度</span>
+        progressBar.progress = values[0]
+    }
+    
+    <span class="keyword">override fun</span> onPostExecute(result: String) {
+        <span class="comment">// 主线程处理结果</span>
+        textView.text = result
+    }
+}</code></pre>
+
+            <div class="tip warn"><strong>⚠️ AsyncTask问题</strong>
+                <p style="margin-top:8px">• 内存泄漏风险（持有Activity引用）<br>• 默认串行执行<br>• 生命周期处理困难<br>• 已被官方废弃</p>
+            </div>
+        </section>
+
+        <section id="coroutine" class="section">
+            <h2>Kotlin 协程 ⭐ 推荐</h2>
+            <p>Kotlin协程是现代Android开发的首选异步方案，语法简洁，功能强大。</p>
+
+            <h3>基础用法</h3>
+            <pre><code><span class="comment">// 依赖</span>
+<span class="comment">// implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"</span>
+
+<span class="comment">// 在ViewModel中使用</span>
+<span class="keyword">class</span> MyViewModel : ViewModel() {
+    <span class="keyword">fun</span> fetchData() {
+        viewModelScope.launch {
+            <span class="comment">// 主线程</span>
+            showLoading()
+            
+            <span class="keyword">val</span> result = withContext(Dispatchers.IO) {
+                <span class="comment">// IO线程执行网络请求</span>
+                api.getData()
+            }
+            
+            <span class="comment">// 自动切回主线程</span>
+            updateUI(result)
+        }
+    }
+}
+
+<span class="comment">// 在Activity/Fragment中</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> data = withContext(Dispatchers.IO) {
+        repository.fetchData()
+    }
+    textView.text = data
+}</code></pre>
+
+            <h3>调度器 (Dispatcher)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>调度器</th>
+                        <th>用途</th>
+                        <th>线程池</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Dispatchers.Main</code></td>
+                        <td>UI操作</td>
+                        <td>主线程</td>
+                    </tr>
+                    <tr>
+                        <td><code>Dispatchers.IO</code></td>
+                        <td>网络、文件IO</td>
+                        <td>共享IO线程池</td>
+                    </tr>
+                    <tr>
+                        <td><code>Dispatchers.Default</code></td>
+                        <td>CPU密集计算</td>
+                        <td>CPU核心数线程</td>
+                    </tr>
+                    <tr>
+                        <td><code>Dispatchers.Unconfined</code></td>
+                        <td>不限定线程</td>
+                        <td>当前线程</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>并发与异常处理</h3>
+            <pre><code><span class="comment">// 并行执行多个任务</span>
+lifecycleScope.launch {
+    <span class="keyword">val</span> deferred1 = async(Dispatchers.IO) { fetchUser() }
+    <span class="keyword">val</span> deferred2 = async(Dispatchers.IO) { fetchPosts() }
+    
+    <span class="keyword">val</span> user = deferred1.await()
+    <span class="keyword">val</span> posts = deferred2.await()
+    
+    showUserWithPosts(user, posts)
+}
+
+<span class="comment">// 异常处理</span>
+viewModelScope.launch {
+    <span class="keyword">try</span> {
+        <span class="keyword">val</span> result = withContext(Dispatchers.IO) {
+            api.fetchData()
+        }
+        onSuccess(result)
+    } <span class="keyword">catch</span> (e: Exception) {
+        onError(e)
+    }
+}
+
+<span class="comment">// 使用 supervisorScope 隔离子协程失败</span>
+supervisorScope {
+    launch { task1() }  <span class="comment">// 失败不影响task2</span>
+    launch { task2() }
+}</code></pre>
+
+            <div class="tip success"><strong>✅ 协程优势</strong>
+                <p style="margin-top:8px">• 代码简洁，像同步代码一样写异步<br>• 结构化并发，自动取消管理<br>• 轻量级，可创建大量协程<br>• 与Jetpack完美集成</p>
+            </div>
+        </section>
+
+        <section id="rxjava" class="section">
+            <h2>RxJava</h2>
+            <p>响应式编程库，通过观察者模式处理异步数据流，适合复杂的数据变换场景。</p>
+
+            <pre><code><span class="comment">// 基本用法</span>
+Observable.just(<span class="string">"Hello"</span>)
+    .subscribeOn(Schedulers.io())        <span class="comment">// 上游在IO线程</span>
+    .observeOn(AndroidSchedulers.mainThread())  <span class="comment">// 下游在主线程</span>
+    .subscribe(
+        { result -> textView.text = result },
+        { error -> showError(error) }
+    )
+
+<span class="comment">// 链式操作</span>
+api.getUsers()
+    .subscribeOn(Schedulers.io())
+    .map { users -> users.filter { it.isActive } }
+    .flatMap { users -> 
+        Observable.fromIterable(users)
+            .flatMap { user -> api.getDetails(user.id) }
+            .toList()
+            .toObservable()
+    }
+    .observeOn(AndroidSchedulers.mainThread())
+    .subscribe { details -> showDetails(details) }
+
+<span class="comment">// 防止内存泄漏 - CompositeDisposable</span>
+<span class="keyword">private val</span> disposables = CompositeDisposable()
+
+disposables.add(
+    api.getData()
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe()
+)
+
+<span class="comment">// onDestroy中清理</span>
+<span class="keyword">override fun</span> onDestroy() {
+    disposables.clear()
+    <span class="keyword">super</span>.onDestroy()
+}</code></pre>
+
+            <h3>常用操作符</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>操作符</th>
+                        <th>作用</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>map</code></td>
+                        <td>转换每个元素</td>
+                    </tr>
+                    <tr>
+                        <td><code>flatMap</code></td>
+                        <td>转换为新的Observable</td>
+                    </tr>
+                    <tr>
+                        <td><code>filter</code></td>
+                        <td>过滤元素</td>
+                    </tr>
+                    <tr>
+                        <td><code>debounce</code></td>
+                        <td>防抖，常用于搜索</td>
+                    </tr>
+                    <tr>
+                        <td><code>throttleFirst</code></td>
+                        <td>节流，防止重复点击</td>
+                    </tr>
+                    <tr>
+                        <td><code>zip</code></td>
+                        <td>组合多个源</td>
+                    </tr>
+                    <tr>
+                        <td><code>retry</code></td>
+                        <td>失败重试</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="workmanager" class="section">
+            <h2>WorkManager</h2>
+            <p>Jetpack组件，用于可靠的后台任务调度，即使应用退出或设备重启也能执行。</p>
+
+            <h3>适用场景</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3">📤 上传日志</h3>
+                        <p>应用退出后仍需完成的上传任务</p>
+                </div>
+                <div class="card">
+                    <h3">🔄 数据同步</h3>
+                        <p>定期与服务器同步数据</p>
+                </div>
+                <div class="card">
+                    <h3">🖼️ 图片处理</h3>
+                        <p>压缩、上传图片等耗时任务</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// 定义Worker</span>
+<span class="keyword">class</span> UploadWorker(context: Context, params: WorkerParameters) 
+    : CoroutineWorker(context, params) {
+    
+    <span class="keyword">override suspend fun</span> doWork(): Result {
+        <span class="keyword">return try</span> {
+            <span class="keyword">val</span> data = inputData.getString(<span class="string">"data"</span>)
+            uploadData(data)
+            Result.success()
+        } <span class="keyword">catch</span> (e: Exception) {
+            Result.retry()  <span class="comment">// 或 Result.failure()</span>
+        }
+    }
+}
+
+<span class="comment">// 创建任务请求</span>
+<span class="keyword">val</span> uploadRequest = OneTimeWorkRequestBuilder&lt;UploadWorker&gt;()
+    .setInputData(workDataOf(<span class="string">"data"</span> to <span class="string">"content"</span>))
+    .setConstraints(
+        Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(<span class="keyword">true</span>)
+            .build()
+    )
+    .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+    .build()
+
+<span class="comment">// 提交任务</span>
+WorkManager.getInstance(context).enqueue(uploadRequest)
+
+<span class="comment">// 观察任务状态</span>
+WorkManager.getInstance(context)
+    .getWorkInfoByIdLiveData(uploadRequest.id)
+    .observe(lifecycleOwner) { info ->
+        <span class="keyword">when</span> (info.state) {
+            WorkInfo.State.SUCCEEDED -> showSuccess()
+            WorkInfo.State.FAILED -> showError()
+            <span class="keyword">else</span> -> { }
+        }
+    }
+
+<span class="comment">// 周期性任务</span>
+<span class="keyword">val</span> syncRequest = PeriodicWorkRequestBuilder&lt;SyncWorker&gt;(
+    1, TimeUnit.HOURS  <span class="comment">// 最小15分钟</span>
+).build()</code></pre>
+        </section>
+
+        <section id="compare" class="section">
+            <h2>技术选型对比</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐技术</th>
+                        <th>原因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>简单异步任务</td>
+                        <td>Kotlin协程</td>
+                        <td>简洁、易用、与Jetpack集成</td>
+                    </tr>
+                    <tr>
+                        <td>复杂数据流处理</td>
+                        <td>RxJava / Flow</td>
+                        <td>强大的操作符支持</td>
+                    </tr>
+                    <tr>
+                        <td>可靠后台任务</td>
+                        <td>WorkManager</td>
+                        <td>系统调度、支持约束</td>
+                    </tr>
+                    <tr>
+                        <td>精确定时任务</td>
+                        <td>AlarmManager</td>
+                        <td>即使Doze也能执行</td>
+                    </tr>
+                    <tr>
+                        <td>前台长时间任务</td>
+                        <td>Foreground Service</td>
+                        <td>用户可见、不被杀死</td>
+                    </tr>
+                    <tr>
+                        <td>批量并发请求</td>
+                        <td>线程池 + 协程</td>
+                        <td>可控并发数</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tip"><strong>🎯 2024年推荐方案</strong>
+                <p style="margin-top:8px">• <strong>首选Kotlin协程</strong>：配合Flow处理数据流<br>
+                    • <strong>后台任务用WorkManager</strong>：可靠性有保障<br>
+                    • <strong>RxJava</strong>：老项目维护或复杂流处理<br>
+                    • <strong>避免</strong>：AsyncTask、HandlerThread（除非必要）</p>
+            </div>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>

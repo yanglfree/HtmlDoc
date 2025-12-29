@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android系统启动完整流程 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --red: #f85149;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(210, 153, 34, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--green), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--green), var(--orange));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--green)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--green);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--green);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.warn {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: rgba(210, 153, 34, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--green)
+        }
+
+        .tip.warn strong {
+            color: var(--orange)
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+            margin: 24px 0
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border)
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--green);
+            border-radius: 50%;
+            border: 2px solid var(--bg)
+        }
+
+        .timeline-item.kernel::before {
+            background: var(--purple)
+        }
+
+        .timeline-item.init::before {
+            background: var(--orange)
+        }
+
+        .timeline-item.zygote::before {
+            background: var(--blue)
+        }
+
+        .timeline-item.system::before {
+            background: var(--cyan)
+        }
+
+        .timeline-item.launcher::before {
+            background: var(--green)
+        }
+
+        .timeline-item h4 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--text)
+        }
+
+        .timeline-item p {
+            font-size: 13px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .timeline-item code {
+            font-size: 12px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .flow {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0
+        }
+
+        .flow-title {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px
+        }
+
+        .flow-step {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 500
+        }
+
+        .flow-arrow {
+            color: var(--green);
+            font-size: 16px
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--green)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 26px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .flow-steps {
+                flex-direction: column
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">启动概览</a><a href="#boot">BootLoader</a><a href="#kernel">Linux内核</a><a
+            href="#init">Init进程</a><a href="#zygote">Zygote进程</a><a href="#system">SystemServer</a><a
+            href="#launcher">Launcher启动</a><a href="#summary">流程总结</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🚀 Android系统启动完整流程</h1>
+            <p>从按下电源键到显示桌面的完整技术解析</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>启动流程概览</h2>
+            <p>Android系统启动是一个从硬件到软件、从底层到应用层的层层初始化过程，主要包含以下阶段：</p>
+
+            <div class="flow">
+                <div class="flow-title">启动阶段总览</div>
+                <div class="flow-steps">
+                    <div class="flow-step">🔌 BootLoader</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">🐧 Linux Kernel</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">⚙️ Init 进程</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">🥚 Zygote</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">📱 SystemServer</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">🏠 Launcher</div>
+                </div>
+            </div>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>⏱️ 启动时间分布</h3>
+                    <ul>
+                        <li>BootLoader: ~1-2秒</li>
+                        <li>Kernel: ~3-5秒</li>
+                        <li>Init/Zygote: ~5-10秒</li>
+                        <li>SystemServer: ~10-20秒</li>
+                        <li>总计: ~20-40秒</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>🔑 关键进程</h3>
+                    <ul>
+                        <li><code>init</code> - PID 1，所有进程之父</li>
+                        <li><code>zygote</code> - 所有App进程之父</li>
+                        <li><code>system_server</code> - 系统服务进程</li>
+                        <li><code>surfaceflinger</code> - 显示服务</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="boot" class="section">
+            <h2>BootLoader 阶段</h2>
+            <p>按下电源键后，首先执行的是固化在ROM中的引导程序。</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>1. Boot ROM</h4>
+                    <p>CPU上电后执行固化在芯片内部ROM的代码，初始化硬件时钟和内存，加载BootLoader到RAM</p>
+                </div>
+                <div class="timeline-item">
+                    <h4>2. BootLoader (如 U-Boot)</h4>
+                    <p>初始化硬件外设、检测启动模式（正常/Recovery/Fastboot）、加载Kernel镜像到内存</p>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>启动模式</th>
+                        <th>触发方式</th>
+                        <th>用途</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Normal Boot</td>
+                        <td>正常开机</td>
+                        <td>启动Android系统</td>
+                    </tr>
+                    <tr>
+                        <td>Recovery</td>
+                        <td>音量+/电源组合</td>
+                        <td>系统恢复、刷机</td>
+                    </tr>
+                    <tr>
+                        <td>Fastboot</td>
+                        <td>音量-/电源组合</td>
+                        <td>刷写分区、解锁</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="kernel" class="section">
+            <h2>Linux Kernel 阶段</h2>
+            <p>BootLoader加载完Kernel镜像后，跳转执行Linux内核代码。</p>
+
+            <div class="timeline">
+                <div class="timeline-item kernel">
+                    <h4>1. Kernel 解压与初始化</h4>
+                    <p>解压zImage，设置内存管理、中断控制器、初始化调度器</p>
+                </div>
+                <div class="timeline-item kernel">
+                    <h4>2. 驱动加载</h4>
+                    <p>加载设备驱动：显示、触摸、存储、USB、WiFi等</p>
+                </div>
+                <div class="timeline-item kernel">
+                    <h4>3. 挂载根文件系统</h4>
+                    <p>挂载system、vendor、data等分区</p>
+                </div>
+                <div class="timeline-item kernel">
+                    <h4>4. 启动 init 进程</h4>
+                    <p>内核启动完成后，执行 <code>/system/bin/init</code>，这是用户空间的第一个进程 (PID=1)</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// Kernel 启动流程 (简化)</span>
+start_kernel()
+├── setup_arch()           <span class="comment">// 架构相关初始化</span>
+├── mm_init()              <span class="comment">// 内存管理初始化</span>
+├── sched_init()           <span class="comment">// 调度器初始化</span>
+├── init_IRQ()             <span class="comment">// 中断初始化</span>
+├── rest_init()
+│   └── kernel_init()
+│       └── run_init_process(<span class="string">"/system/bin/init"</span>)  <span class="comment">// 启动init</span></code></pre>
+        </section>
+
+        <section id="init" class="section">
+            <h2>Init 进程</h2>
+            <p>Init是Android用户空间的第一个进程，负责解析init.rc配置文件，启动关键守护进程。</p>
+
+            <h3>Init 主要职责</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3>📜 解析 init.rc</h3>
+                    <p>读取并执行 <code>/system/etc/init/*.rc</code> 配置文件中的命令和服务定义</p>
+                </div>
+                <div class="card">
+                    <h3>🔧 属性服务</h3>
+                    <p>启动 property_service，管理系统属性（类似注册表）</p>
+                </div>
+                <div class="card">
+                    <h3>👶 启动子进程</h3>
+                    <p>fork 出 ueventd、logd、servicemanager、surfaceflinger、zygote 等</p>
+                </div>
+                <div class="card">
+                    <h3>👀 进程监控</h3>
+                    <p>作为父进程，监控子进程状态，必要时重启崩溃的服务</p>
+                </div>
+            </div>
+
+            <h3>init.rc 关键配置</h3>
+            <pre><code><span class="comment"># /system/core/rootdir/init.zygote64.rc</span>
+
+<span class="keyword">service</span> zygote /system/bin/app_process64 -Xzygote /system/bin \
+    --zygote --start-system-server
+    <span class="keyword">class</span> main
+    <span class="keyword">priority</span> -20
+    <span class="keyword">socket</span> zygote stream 660 root system
+    <span class="keyword">socket</span> usap_pool_primary stream 660 root system
+    <span class="keyword">onrestart</span> restart audioserver
+    <span class="keyword">onrestart</span> restart cameraserver
+    <span class="keyword">onrestart</span> restart media</code></pre>
+
+            <h3>Init 启动顺序</h3>
+            <div class="flow">
+                <div class="flow-steps">
+                    <div class="flow-step">属性服务</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">ueventd</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">logd</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">servicemanager</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">surfaceflinger</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">zygote</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="zygote" class="section">
+            <h2>Zygote 进程</h2>
+            <p>Zygote（孵化器）是所有Android应用进程和SystemServer的父进程，通过fork机制快速创建新进程。</p>
+
+            <div class="timeline">
+                <div class="timeline-item zygote">
+                    <h4>1. 启动虚拟机</h4>
+                    <p>创建并初始化 ART/Dalvik 虚拟机，加载系统类和资源</p>
+                </div>
+                <div class="timeline-item zygote">
+                    <h4>2. 预加载资源</h4>
+                    <p>预加载常用Java类、Android资源、共享库（提升App启动速度）</p>
+                </div>
+                <div class="timeline-item zygote">
+                    <h4>3. 创建 Socket</h4>
+                    <p>创建 /dev/socket/zygote 用于接收 AMS 的fork请求</p>
+                </div>
+                <div class="timeline-item zygote">
+                    <h4>4. Fork SystemServer</h4>
+                    <p>Zygote 启动后的第一件事是 fork 出 SystemServer 进程</p>
+                </div>
+                <div class="timeline-item zygote">
+                    <h4>5. 循环等待</h4>
+                    <p>进入循环，等待 Socket 请求以 fork 新的 App 进程</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// ZygoteInit.java 核心流程</span>
+<span class="keyword">public static void</span> main(String argv[]) {
+    <span class="comment">// 1. 创建ZygoteServer（Socket服务端）</span>
+    ZygoteServer zygoteServer = <span class="keyword">new</span> ZygoteServer();
+    
+    <span class="comment">// 2. 预加载资源</span>
+    preload();  <span class="comment">// 加载类、资源、共享库</span>
+    
+    <span class="comment">// 3. 创建Socket</span>
+    zygoteServer.createZygoteSocket(socketName);
+    
+    <span class="comment">// 4. Fork SystemServer</span>
+    <span class="keyword">if</span> (startSystemServer) {
+        Runnable r = forkSystemServer();
+        <span class="keyword">if</span> (r != <span class="keyword">null</span>) {
+            r.run();  <span class="comment">// 在SystemServer进程中执行</span>
+            <span class="keyword">return</span>;
+        }
+    }
+    
+    <span class="comment">// 5. Zygote进程进入循环等待</span>
+    zygoteServer.runSelectLoop();
+}</code></pre>
+
+            <div class="tip"><strong>💡 为什么需要 Zygote？</strong>
+                <p style="margin-top:8px">通过 fork 已经加载了虚拟机和系统资源的 Zygote，新App进程可以直接使用这些资源（COW机制），无需重新加载，大幅提升App启动速度。</p>
+            </div>
+        </section>
+
+        <section id="system" class="section">
+            <h2>SystemServer 进程</h2>
+            <p>SystemServer 是 Android 系统服务的宿主进程，运行着 AMS、WMS、PMS 等核心服务。</p>
+
+            <h3>关键系统服务</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>服务</th>
+                        <th>类名</th>
+                        <th>职责</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AMS</td>
+                        <td>ActivityManagerService</td>
+                        <td>四大组件管理、进程管理</td>
+                    </tr>
+                    <tr>
+                        <td>WMS</td>
+                        <td>WindowManagerService</td>
+                        <td>窗口管理、输入事件分发</td>
+                    </tr>
+                    <tr>
+                        <td>PMS</td>
+                        <td>PackageManagerService</td>
+                        <td>应用安装、权限管理</td>
+                    </tr>
+                    <tr>
+                        <td>PKMS</td>
+                        <td>PowerManagerService</td>
+                        <td>电源管理、WakeLock</td>
+                    </tr>
+                    <tr>
+                        <td>IMS</td>
+                        <td>InputManagerService</td>
+                        <td>输入事件管理</td>
+                    </tr>
+                    <tr>
+                        <td>NMS</td>
+                        <td>NotificationManagerService</td>
+                        <td>通知管理</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>服务启动顺序</h3>
+            <pre><code><span class="comment">// SystemServer.java</span>
+<span class="keyword">private void</span> run() {
+    <span class="comment">// 1. 引导服务（最先启动，其他服务依赖）</span>
+    startBootstrapServices();
+    <span class="comment">// → AMS, PMS, PKMS, DisplayManagerService</span>
+    
+    <span class="comment">// 2. 核心服务</span>
+    startCoreServices();
+    <span class="comment">// → BatteryService, UsageStatsService</span>
+    
+    <span class="comment">// 3. 其他服务</span>
+    startOtherServices();
+    <span class="comment">// → WMS, IMS, NMS, ConnectivityService...</span>
+    
+    <span class="comment">// 4. 系统就绪</span>
+    mActivityManagerService.systemReady(() -> {
+        <span class="comment">// 启动Launcher</span>
+        startHomeActivity();
+    });
+}</code></pre>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>🔄 Binder 机制</h3>
+                    <p>各服务通过 ServiceManager 注册，应用通过 Binder IPC 调用系统服务</p>
+                </div>
+                <div class="card">
+                    <h3>📡 系统就绪回调</h3>
+                    <p>所有服务启动后，AMS 发送 systemReady 回调，触发启动 Launcher</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="launcher" class="section">
+            <h2>Launcher 启动</h2>
+            <p>SystemServer 准备就绪后，AMS 会启动默认的 Launcher 应用（桌面），用户看到主屏幕。</p>
+
+            <div class="timeline">
+                <div class="timeline-item launcher">
+                    <h4>1. AMS 发起启动请求</h4>
+                    <p>AMS.systemReady() 中调用 startHomeActivity()，根据 Intent 查找 Launcher</p>
+                </div>
+                <div class="timeline-item launcher">
+                    <h4>2. Zygote Fork 进程</h4>
+                    <p>AMS 通过 Socket 请求 Zygote fork 出 Launcher 进程</p>
+                </div>
+                <div class="timeline-item launcher">
+                    <h4>3. 创建 Application</h4>
+                    <p>新进程中创建 Application 实例，调用 onCreate()</p>
+                </div>
+                <div class="timeline-item launcher">
+                    <h4>4. 启动 Activity</h4>
+                    <p>创建 LauncherActivity，完成布局渲染，显示桌面</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// ActivityManagerService.java</span>
+<span class="keyword">void</span> startHomeActivity(Intent intent, ActivityInfo aInfo) {
+    <span class="comment">// 查找 Category.HOME 的 Activity</span>
+    intent.setComponent(<span class="keyword">new</span> ComponentName(
+        aInfo.applicationInfo.packageName, aInfo.name));
+    
+    <span class="comment">// 启动到主屏任务栈</span>
+    mActivityStartController.startHomeActivity(intent, aInfo);
+}</code></pre>
+
+            <div class="tip"><strong>🎉 启动完成标志</strong>
+                <p style="margin-top:8px">当 Launcher 的 Activity.onResume() 执行完成，开机动画结束，用户看到桌面图标，整个系统启动流程完成。</p>
+            </div>
+        </section>
+
+        <section id="summary" class="section">
+            <h2>流程总结</h2>
+            <pre><code><span class="comment">// Android 系统启动完整流程</span>
+
+<span class="string">按下电源键</span>
+    │
+    ▼
+<span class="keyword">[BootLoader]</span> ─────────────────────────────────────────
+    │  Boot ROM → BootLoader → 加载 Kernel
+    ▼
+<span class="keyword">[Linux Kernel]</span> ──────────────────────────────────────
+    │  硬件初始化 → 驱动加载 → 挂载文件系统
+    │  └─→ 启动 init 进程 (PID=1)
+    ▼
+<span class="keyword">[Init 进程]</span> ─────────────────────────────────────────
+    │  解析 init.rc → 属性服务 → 启动守护进程
+    │  └─→ 启动 zygote 服务
+    ▼
+<span class="keyword">[Zygote 进程]</span> ───────────────────────────────────────
+    │  创建虚拟机 → 预加载资源 → 创建 Socket
+    │  └─→ fork SystemServer
+    ▼
+<span class="keyword">[SystemServer]</span> ──────────────────────────────────────
+    │  引导服务 → 核心服务 → 其他服务
+    │  AMS / WMS / PMS / ...
+    │  └─→ systemReady() → 启动 Launcher
+    ▼
+<span class="keyword">[Launcher]</span> ──────────────────────────────────────────
+    │  Zygote fork → 创建 Application → 启动 Activity
+    │  └─→ 显示桌面 ✅
+    ▼
+<span class="string">系统启动完成</span></code></pre>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>🔑 核心要点</h3>
+                    <ul>
+                        <li>Init 是用户空间第一个进程</li>
+                        <li>Zygote 是所有App的父进程</li>
+                        <li>SystemServer 运行核心系统服务</li>
+                        <li>通过 fork 机制快速启动App</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>📚 关键源码位置</h3>
+                    <ul>
+                        <li>Init: <code>system/core/init/</code></li>
+                        <li>Zygote: <code>frameworks/base/core/java/com/android/internal/os/ZygoteInit.java</code></li>
+                        <li>SystemServer:
+                            <code>frameworks/base/services/java/com/android/server/SystemServer.java</code></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>

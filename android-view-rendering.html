@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android视图渲染流程 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --pink: #f778ba;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(163, 113, 247, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--blue), var(--purple));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--blue)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--blue);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--blue);
+            margin-bottom: 12px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.warn {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: rgba(210, 153, 34, 0.3)
+        }
+
+        .tip.success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--blue)
+        }
+
+        .tip.warn strong {
+            color: var(--orange)
+        }
+
+        .tip.success strong {
+            color: var(--green)
+        }
+
+        .flow {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0
+        }
+
+        .flow-title {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px
+        }
+
+        .flow-step {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 500
+        }
+
+        .flow-arrow {
+            color: var(--blue);
+            font-size: 16px
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+            margin: 24px 0
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border)
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--blue);
+            border-radius: 50%;
+            border: 2px solid var(--bg)
+        }
+
+        .timeline-item h4 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--text)
+        }
+
+        .timeline-item p {
+            font-size: 13px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--blue)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 26px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+
+            .flow-steps {
+                flex-direction: column
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">渲染概览</a><a href="#measure">Measure测量</a><a href="#layout">Layout布局</a><a
+            href="#draw">Draw绘制</a><a href="#vsync">VSync机制</a><a href="#hwui">硬件加速</a><a
+            href="#surface">Surface系统</a><a href="#optimize">性能优化</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🎨 Android视图渲染流程</h1>
+            <p>从代码到屏幕 - View绘制原理与渲染管线详解</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>渲染流程概览</h2>
+            <p>Android视图渲染是将View树转换为屏幕像素的过程，核心流程包括<strong>测量(Measure)→布局(Layout)→绘制(Draw)</strong>三个阶段。</p>
+
+            <div class="flow">
+                <div class="flow-title">渲染核心流程</div>
+                <div class="flow-steps">
+                    <div class="flow-step">📐 Measure</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">📍 Layout</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">🎨 Draw</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">🖥️ SurfaceFlinger</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">📺 显示屏</div>
+                </div>
+            </div>
+
+            <h3>渲染触发入口</h3>
+            <pre><code><span class="comment">// 触发渲染的方式</span>
+view.invalidate()      <span class="comment">// 只触发 Draw</span>
+view.requestLayout()   <span class="comment">// 触发 Measure → Layout → Draw</span>
+view.postInvalidate()  <span class="comment">// 在非UI线程触发重绘</span>
+
+<span class="comment">// ViewRootImpl.performTraversals() - 核心入口</span>
+<span class="keyword">private void</span> performTraversals() {
+    performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+    performLayout(lp, mWidth, mHeight);
+    performDraw();
+}</code></pre>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>🌳 View Tree</h3>
+                    <p>界面由DecorView为根的View树组成，ViewRootImpl负责管理整棵树的遍历渲染</p>
+                </div>
+                <div class="card">
+                    <h3">⏱️ 16ms目标</h3>
+                        <p>60fps刷新率要求每帧在16.67ms内完成，否则造成掉帧卡顿</p>
+                </div>
+                <div class="card">
+                    <h3">🔄 双缓冲</h3>
+                        <p>后台缓冲区绘制完成后与前台交换，避免画面撕裂</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="measure" class="section">
+            <h2>Measure 测量阶段</h2>
+            <p>确定每个View的宽高尺寸，通过MeasureSpec向下传递约束，子View向上报告测量结果。</p>
+
+            <h3>MeasureSpec 模式</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>模式</th>
+                        <th>含义</th>
+                        <th>对应场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>EXACTLY</code></td>
+                        <td>精确尺寸，View必须使用该值</td>
+                        <td>match_parent 或 具体dp值</td>
+                    </tr>
+                    <tr>
+                        <td><code>AT_MOST</code></td>
+                        <td>最大尺寸，View不能超过该值</td>
+                        <td>wrap_content</td>
+                    </tr>
+                    <tr>
+                        <td><code>UNSPECIFIED</code></td>
+                        <td>无限制，View想多大就多大</td>
+                        <td>ScrollView内的子View</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// MeasureSpec = Mode + Size (32位int)</span>
+<span class="keyword">int</span> mode = MeasureSpec.getMode(measureSpec);
+<span class="keyword">int</span> size = MeasureSpec.getSize(measureSpec);
+
+<span class="comment">// View的测量流程</span>
+<span class="keyword">protected void</span> onMeasure(<span class="keyword">int</span> widthSpec, <span class="keyword">int</span> heightSpec) {
+    <span class="comment">// 1. 根据MeasureSpec计算自身尺寸</span>
+    <span class="keyword">int</span> width = calculateWidth(widthSpec);
+    <span class="keyword">int</span> height = calculateHeight(heightSpec);
+    
+    <span class="comment">// 2. 必须调用setMeasuredDimension保存结果</span>
+    setMeasuredDimension(width, height);
+}
+
+<span class="comment">// ViewGroup需要测量子View</span>
+<span class="keyword">protected void</span> onMeasure(...) {
+    <span class="keyword">for</span> (View child : children) {
+        measureChild(child, widthSpec, heightSpec);
+    }
+    <span class="comment">// 根据子View尺寸计算自身尺寸</span>
+}</code></pre>
+
+            <div class="tip warn"><strong>⚠️ 测量性能陷阱</strong>
+                <p style="margin-top:8px">避免在onMeasure中创建对象或执行耗时操作，因为可能被多次调用。RelativeLayout在复杂布局时会测量两次。</p>
+            </div>
+        </section>
+
+        <section id="layout" class="section">
+            <h2>Layout 布局阶段</h2>
+            <p>确定每个View在父容器中的位置（left, top, right, bottom坐标）。</p>
+
+            <pre><code><span class="comment">// ViewGroup.layout() → onLayout()</span>
+<span class="keyword">protected void</span> onLayout(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> l, <span class="keyword">int</span> t, <span class="keyword">int</span> r, <span class="keyword">int</span> b) {
+    <span class="keyword">int</span> childLeft = paddingLeft;
+    <span class="keyword">int</span> childTop = paddingTop;
+    
+    <span class="keyword">for</span> (View child : children) {
+        <span class="keyword">int</span> childWidth = child.getMeasuredWidth();
+        <span class="keyword">int</span> childHeight = child.getMeasuredHeight();
+        
+        <span class="comment">// 确定子View的位置</span>
+        child.layout(childLeft, childTop, 
+                     childLeft + childWidth, 
+                     childTop + childHeight);
+        
+        childTop += childHeight + margin;
+    }
+}</code></pre>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">📍 位置确定</h3>
+                        <p>layout()方法设置View的mLeft, mTop, mRight, mBottom四个值</p>
+                </div>
+                <div class="card">
+                    <h3">🔢 坐标系</h3>
+                        <p>相对于父容器的左上角，X轴向右为正，Y轴向下为正</p>
+                </div>
+                <div class="card">
+                    <h3">📐 获取位置</h3>
+                        <p>getLeft()/getTop()/getWidth()/getHeight() 获取布局后的值</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="draw" class="section">
+            <h2>Draw 绘制阶段</h2>
+            <p>将View的内容绘制到Canvas上，最终渲染到屏幕。</p>
+
+            <h3>绘制顺序（6步）</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>① drawBackground()</h4>
+                    <p>绘制背景</p>
+                </div>
+                <div class="timeline-item">
+                    <h4>② onDraw()</h4>
+                    <p>绘制View自身内容（自定义View主要重写此方法）</p>
+                </div>
+                <div class="timeline-item">
+                    <h4>③ dispatchDraw()</h4>
+                    <p>绘制子View（ViewGroup重写）</p>
+                </div>
+                <div class="timeline-item">
+                    <h4>④ onDrawForeground()</h4>
+                    <p>绘制前景、滚动条等装饰</p>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// 自定义View绑定示例</span>
+<span class="keyword">class</span> CustomView : View {
+    <span class="keyword">override fun</span> onDraw(canvas: Canvas) {
+        <span class="keyword">super</span>.onDraw(canvas)
+        
+        <span class="comment">// 绘制圆形</span>
+        canvas.drawCircle(centerX, centerY, radius, paint)
+        
+        <span class="comment">// 绘制文字</span>
+        canvas.drawText(<span class="string">"Hello"</span>, x, y, textPaint)
+        
+        <span class="comment">// 绘制路径</span>
+        canvas.drawPath(path, pathPaint)
+    }
+}</code></pre>
+
+            <h3>Canvas 核心API</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>方法</th>
+                        <th>功能</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>drawRect/Circle/Oval</code></td>
+                        <td>绘制基本图形</td>
+                    </tr>
+                    <tr>
+                        <td><code>drawBitmap</code></td>
+                        <td>绘制位图</td>
+                    </tr>
+                    <tr>
+                        <td><code>drawText</code></td>
+                        <td>绘制文字</td>
+                    </tr>
+                    <tr>
+                        <td><code>drawPath</code></td>
+                        <td>绘制路径</td>
+                    </tr>
+                    <tr>
+                        <td><code>save/restore</code></td>
+                        <td>保存/恢复画布状态</td>
+                    </tr>
+                    <tr>
+                        <td><code>translate/rotate/scale</code></td>
+                        <td>画布变换</td>
+                    </tr>
+                    <tr>
+                        <td><code>clipRect/clipPath</code></td>
+                        <td>裁剪画布</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="vsync" class="section">
+            <h2>VSync 与 Choreographer</h2>
+            <p>VSync（垂直同步）信号协调CPU/GPU渲染与屏幕刷新，Choreographer负责调度帧回调。</p>
+
+            <div class="flow">
+                <div class="flow-title">帧渲染时序</div>
+                <div class="flow-steps">
+                    <div class="flow-step">VSync信号</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">Choreographer回调</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">处理Input</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">处理Animation</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">执行Traversal</div>
+                </div>
+            </div>
+
+            <pre><code><span class="comment">// Choreographer 帧回调</span>
+Choreographer.getInstance().postFrameCallback { frameTimeNanos ->
+    <span class="comment">// 在下一个VSync信号时执行</span>
+    <span class="comment">// frameTimeNanos: 帧开始的时间戳</span>
+    updateAnimation(frameTimeNanos)
+}
+
+<span class="comment">// 回调类型优先级</span>
+<span class="comment">// CALLBACK_INPUT (0)      - 输入事件</span>
+<span class="comment">// CALLBACK_ANIMATION (1)  - 动画</span>
+<span class="comment">// CALLBACK_TRAVERSAL (2)  - View遍历</span>
+<span class="comment">// CALLBACK_COMMIT (3)     - 提交</span></code></pre>
+
+            <div class="tip"><strong>⏱️ 帧时间预算 (60fps)</strong>
+                <p style="margin-top:8px">VSync周期: 16.67ms<br>
+                    Input处理: ~2ms<br>
+                    动画计算: ~2ms<br>
+                    Measure+Layout: ~4ms<br>
+                    Draw: ~4ms<br>
+                    GPU渲染: ~4ms</p>
+            </div>
+        </section>
+
+        <section id="hwui" class="section">
+            <h2>硬件加速渲染</h2>
+            <p>Android 3.0起引入硬件加速，使用GPU执行绑定操作，显著提升渲染性能。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">💻 软件渲染</h3>
+                        <p>CPU绑定到Bitmap → 通过Surface提交<br>每次绘制整个View树</p>
+                </div>
+                <div class="card">
+                    <h3">🎮 硬件渲染</h3>
+                        <p>构建DisplayList → GPU执行<br>仅重绘变化的部分</p>
+                </div>
+            </div>
+
+            <h3>RenderThread 渲染线程</h3>
+            <pre><code><span class="comment">// 硬件加速渲染流程</span>
+<span class="string">UI Thread:</span>
+  └─ View.draw() 
+      └─ 构建/更新 DisplayList (RenderNode)
+          └─ 记录绑定命令 (Canvas → RecordingCanvas)
+
+<span class="string">Render Thread:</span>
+  └─ 同步 DisplayList
+      └─ 执行 OpenGL/Vulkan 命令
+          └─ 输出到 Surface Buffer
+
+<span class="comment">// 检查View是否硬件加速</span>
+view.isHardwareAccelerated()
+
+<span class="comment">// 某些操作不支持硬件加速</span>
+<span class="comment">// Canvas.drawBitmapMesh(), Canvas.drawPicture() 等</span></code></pre>
+
+            <div class="tip success"><strong>✅ 硬件加速优势</strong>
+                <p style="margin-top:8px">• DisplayList缓存，避免重复绘制<br>
+                    • RenderThread与UI线程并行<br>
+                    • GPU并行处理像素<br>
+                    • 支持更复杂的动画效果</p>
+            </div>
+        </section>
+
+        <section id="surface" class="section">
+            <h2>Surface 与 SurfaceFlinger</h2>
+            <p>Surface是一块图形缓冲区，App绑定到Surface，SurfaceFlinger负责合成多个Surface并输出到屏幕。</p>
+
+            <div class="flow">
+                <div class="flow-title">Surface渲染管线</div>
+                <div class="flow-steps">
+                    <div class="flow-step">App绑制</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">BufferQueue</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">SurfaceFlinger</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">HWComposer</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">Display</div>
+                </div>
+            </div>
+
+            <h3>核心组件</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>组件</th>
+                        <th>职责</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Surface</code></td>
+                        <td>应用侧的图形缓冲区句柄</td>
+                    </tr>
+                    <tr>
+                        <td><code>BufferQueue</code></td>
+                        <td>生产者-消费者队列，管理GraphicBuffer</td>
+                    </tr>
+                    <tr>
+                        <td><code>SurfaceFlinger</code></td>
+                        <td>系统服务，合成多个Layer</td>
+                    </tr>
+                    <tr>
+                        <td><code>HWComposer</code></td>
+                        <td>硬件合成器，决定GPU/Overlay合成</td>
+                    </tr>
+                    <tr>
+                        <td><code>Layer</code></td>
+                        <td>SurfaceFlinger中的图层抽象</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// 典型的一帧渲染流程</span>
+1. App通过dequeueBuffer获取空闲缓冲区
+2. App在缓冲区上绑制内容
+3. App通过queueBuffer提交缓冲区
+4. SurfaceFlinger收到VSync信号
+5. SurfaceFlinger从各App获取最新Buffer
+6. HWComposer决定合成策略
+7. 合成结果输出到Display</code></pre>
+        </section>
+
+        <section id="optimize" class="section">
+            <h2>渲染性能优化</h2>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">📉 减少层级</h3>
+                        <p>使用ConstraintLayout减少嵌套，用merge标签优化include</p>
+                </div>
+                <div class="card">
+                    <h3">🚫 避免过度绘制</h3>
+                        <p>移除不可见背景，使用clipRect裁剪，开发者选项查看过度绘制</p>
+                </div>
+                <div class="card">
+                    <h3">📋 复用布局</h3>
+                        <p>RecyclerView复用ViewHolder，ViewStub延迟加载</p>
+                </div>
+                <div class="card">
+                    <h3">⚡ 减少invalidate</h3>
+                        <p>使用invalidate(Rect)局部刷新，避免频繁调用</p>
+                </div>
+            </div>
+
+            <h3>检测工具</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>工具</th>
+                        <th>用途</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Layout Inspector</td>
+                        <td>查看View层级结构</td>
+                    </tr>
+                    <tr>
+                        <td>GPU呈现模式分析</td>
+                        <td>查看每帧渲染时间分布</td>
+                    </tr>
+                    <tr>
+                        <td>过度绘制调试</td>
+                        <td>检测重复绘制区域</td>
+                    </tr>
+                    <tr>
+                        <td>Systrace</td>
+                        <td>分析帧渲染详细时序</td>
+                    </tr>
+                    <tr>
+                        <td>Perfetto</td>
+                        <td>全面的性能追踪</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <pre><code><span class="comment">// 优化示例：使用clipRect避免过度绘制</span>
+<span class="keyword">override fun</span> onDraw(canvas: Canvas) {
+    <span class="comment">// 只绘制可见区域</span>
+    canvas.clipRect(visibleRect)
+    <span class="keyword">super</span>.onDraw(canvas)
+}
+
+<span class="comment">// 使用setWillNotDraw优化</span>
+<span class="keyword">init</span> {
+    setWillNotDraw(<span class="keyword">true</span>)  <span class="comment">// ViewGroup默认不绘制自身</span>
+}</code></pre>
+
+            <div class="tip"><strong>📊 性能指标</strong>
+                <p style="margin-top:8px">• <strong>Janky frames</strong>: 超过16ms的帧占比应 < 1%<br>
+                        • <strong>过度绘制</strong>: 蓝色(1x)可接受，红色(4x+)需优化<br>
+                        • <strong>View层级</strong>: 建议不超过10层</p>
+            </div>
+        </section>
+
+        <div class="tip success"><strong>🎯 总结：渲染关键路径</strong>
+            <p style="margin-top:8px">
+                <code>setContentView</code> → <code>LayoutInflater解析XML</code> → <code>创建View树</code> →<br>
+                <code>ViewRootImpl.performTraversals</code> → <code>Measure→Layout→Draw</code> →<br>
+                <code>构建DisplayList</code> → <code>RenderThread执行GPU命令</code> →<br>
+                <code>Buffer入队</code> → <code>SurfaceFlinger合成</code> → <code>显示</code>
+            </p>
+        </div>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>
