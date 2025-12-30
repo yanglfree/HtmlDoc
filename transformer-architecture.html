@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer 架构详解 - 快速查询手册</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --text: #e6edf3;
+            --text2: #8b949e;
+            --blue: #58a6ff;
+            --green: #3fb950;
+            --purple: #a371f7;
+            --orange: #d29922;
+            --cyan: #39c5cf;
+            --border: #30363d
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        .hero {
+            text-align: center;
+            padding: 48px 24px;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(57, 197, 207, 0.15));
+            border-radius: 16px;
+            border: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 16px
+        }
+
+        .section {
+            margin-bottom: 48px
+        }
+
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: linear-gradient(var(--blue), var(--cyan));
+            border-radius: 2px
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin: 24px 0 16px;
+            color: var(--blue)
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text2)
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--cyan)
+        }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 16px 0
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text)
+        }
+
+        .comment {
+            color: var(--text2)
+        }
+
+        .keyword {
+            color: var(--purple)
+        }
+
+        .string {
+            color: var(--green)
+        }
+
+        .number {
+            color: var(--orange)
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all .2s
+        }
+
+        .card:hover {
+            border-color: var(--blue);
+            transform: translateY(-2px)
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: var(--blue);
+            margin-bottom: 12px
+        }
+
+        .card p,
+        .card li {
+            font-size: 14px;
+            color: var(--text2);
+            margin: 0
+        }
+
+        .card ul {
+            margin: 8px 0 0 16px
+        }
+
+        .tip {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0
+        }
+
+        .tip.success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3)
+        }
+
+        .tip.warn {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: rgba(210, 153, 34, 0.3)
+        }
+
+        .tip strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--blue)
+        }
+
+        .tip.success strong {
+            color: var(--green)
+        }
+
+        .tip.warn strong {
+            color: var(--orange)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: var(--bg2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 16px 0
+        }
+
+        th {
+            background: var(--bg3);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .formula {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            text-align: center;
+            margin: 16px 0;
+            color: var(--cyan)
+        }
+
+        .arch {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0
+        }
+
+        .arch-title {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .arch-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center
+        }
+
+        .arch-layer {
+            background: var(--bg3);
+            border-radius: 8px;
+            padding: 12px 24px;
+            text-align: center;
+            width: 100%;
+            max-width: 300px
+        }
+
+        .arch-layer.highlight {
+            background: rgba(88, 166, 255, 0.2);
+            border: 1px solid var(--blue)
+        }
+
+        .arch-arrow {
+            color: var(--blue);
+            font-size: 20px
+        }
+
+        .toc {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 200px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px
+        }
+
+        .toc h3 {
+            font-size: 12px;
+            color: var(--text2);
+            text-transform: uppercase;
+            margin-bottom: 12px
+        }
+
+        .toc a {
+            display: block;
+            padding: 6px 0;
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 13px
+        }
+
+        .toc a:hover {
+            color: var(--blue)
+        }
+
+        @media(max-width:1200px) {
+            .toc {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 24px 16px
+            }
+
+            .hero h1 {
+                font-size: 26px
+            }
+
+            .cards {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="toc">
+        <h3>目录</h3><a href="#overview">架构总览</a><a href="#attention">注意力机制</a><a href="#encoder">编码器</a><a
+            href="#decoder">解码器</a><a href="#components">核心组件</a><a href="#math">数学原理</a><a href="#variants">变体架构</a><a
+            href="#code">代码实现</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🔮 Transformer 架构详解</h1>
+            <p>Attention Is All You Need - 深度学习革命性架构</p>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>架构总览</h2>
+            <p>Transformer 是 2017 年 Google 在论文《Attention Is All You Need》中提出的革命性架构，完全基于注意力机制，摒弃了 RNN/LSTM
+                的循环结构，实现了高度并行化。</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>🎯 核心创新</h3>
+                    <p>Self-Attention 机制，允许模型在处理每个位置时关注输入序列的所有位置</p>
+                </div>
+                <div class="card">
+                    <h3">⚡ 主要优势</h3>
+                        <p>高度并行化训练、长距离依赖建模、可解释性强</p>
+                </div>
+                <div class="card">
+                    <h3">🌍 广泛应用</h3>
+                        <p>GPT、BERT、ViT、DALL-E 等现代 AI 模型的基础</p>
+                </div>
+            </div>
+
+            <div class="arch">
+                <div class="arch-title">Transformer 整体架构</div>
+                <div style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap">
+                    <div class="arch-box">
+                        <div style="font-size:14px;color:var(--text2);margin-bottom:8px">编码器 (Encoder)</div>
+                        <div class="arch-layer">Output Probabilities</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer">Feed Forward</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer highlight">Multi-Head Attention</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer">Positional Encoding</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer">Input Embedding</div>
+                    </div>
+                    <div class="arch-box">
+                        <div style="font-size:14px;color:var(--text2);margin-bottom:8px">解码器 (Decoder)</div>
+                        <div class="arch-layer">Output Probabilities</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer">Feed Forward</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer highlight">Cross Attention</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer highlight">Masked Self-Attention</div>
+                        <div class="arch-arrow">↑</div>
+                        <div class="arch-layer">Output Embedding</div>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>组件</th>
+                        <th>作用</th>
+                        <th>关键特点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Embedding</strong></td>
+                        <td>将词转换为向量</td>
+                        <td>可学习的词向量表</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Positional Encoding</strong></td>
+                        <td>编码位置信息</td>
+                        <td>正弦/余弦函数或可学习</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Head Attention</strong></td>
+                        <td>并行注意力计算</td>
+                        <td>多个注意力头捕捉不同特征</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Feed Forward</strong></td>
+                        <td>非线性变换</td>
+                        <td>两层全连接 + ReLU/GELU</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Layer Norm</strong></td>
+                        <td>归一化</td>
+                        <td>稳定训练</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Residual</strong></td>
+                        <td>残差连接</td>
+                        <td>缓解梯度消失</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="attention" class="section">
+            <h2>注意力机制 (Attention)</h2>
+            <p>注意力机制是 Transformer 的核心，它计算输入序列中每个元素与其他所有元素的相关性。</p>
+
+            <h3>Scaled Dot-Product Attention</h3>
+            <div class="formula">Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) · V</div>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">🔑 Query (Q)</h3>
+                        <p>查询向量，当前位置想要获取的信息</p>
+                </div>
+                <div class="card">
+                    <h3">🔐 Key (K)</h3>
+                        <p>键向量，其他位置提供的索引信息</p>
+                </div>
+                <div class="card">
+                    <h3">💎 Value (V)</h3>
+                        <p>值向量，其他位置实际传递的信息</p>
+                </div>
+            </div>
+
+            <h3>计算流程</h3>
+            <pre><code><span class="comment"># Step 1: 计算 Q 和 K 的点积</span>
+scores = Q @ K.T  <span class="comment"># [seq_len, seq_len]</span>
+
+<span class="comment"># Step 2: 缩放 (防止点积值过大导致 softmax 梯度消失)</span>
+scores = scores / sqrt(d_k)
+
+<span class="comment"># Step 3: Softmax 归一化得到注意力权重</span>
+attention_weights = softmax(scores)
+
+<span class="comment"># Step 4: 加权求和得到输出</span>
+output = attention_weights @ V</code></pre>
+
+            <h3>Multi-Head Attention</h3>
+            <p>使用多个注意力头并行计算，每个头学习不同的注意力模式：</p>
+
+            <div class="formula">MultiHead(Q, K, V) = Concat(head<sub>1</sub>, ..., head<sub>h</sub>) W<sup>O</sup>
+            </div>
+
+            <pre><code><span class="comment"># 典型配置 (以 GPT-3 为例)</span>
+d_model = <span class="number">12288</span>     <span class="comment"># 模型维度</span>
+n_heads = <span class="number">96</span>         <span class="comment"># 注意力头数量</span>
+d_k = d_model / n_heads = <span class="number">128</span>  <span class="comment"># 每个头的维度</span></code></pre>
+
+            <div class="tip"><strong>💡 为什么需要多头注意力</strong>
+                <p style="margin-top:8px">不同的注意力头可以关注不同的特征：有的关注语法结构，有的关注语义关系，有的关注位置模式。多头设计增强了模型的表达能力。</p>
+            </div>
+        </section>
+
+        <section id="encoder" class="section">
+            <h2>编码器 (Encoder)</h2>
+            <p>编码器负责理解输入序列，将其转换为富含上下文信息的表示。</p>
+
+            <h3>编码器层结构</h3>
+            <pre><code><span class="keyword">class</span> EncoderLayer(nn.Module):
+    <span class="keyword">def</span> forward(self, x, mask=<span class="keyword">None</span>):
+        <span class="comment"># 子层 1: Multi-Head Self-Attention + Add & Norm</span>
+        attn_output = self.self_attention(x, x, x, mask)
+        x = self.norm1(x + attn_output)  <span class="comment"># 残差连接 + LayerNorm</span>
+        
+        <span class="comment"># 子层 2: Feed Forward + Add & Norm</span>
+        ff_output = self.feed_forward(x)
+        x = self.norm2(x + ff_output)    <span class="comment"># 残差连接 + LayerNorm</span>
+        
+        <span class="keyword">return</span> x</code></pre>
+
+            <div class="cards">
+                <div class="card">
+                    <h3">🔄 Self-Attention</h3>
+                        <p>Q、K、V 都来自同一输入，每个位置可以关注所有位置</p>
+                </div>
+                <div class="card">
+                    <h3">➕ 残差连接</h3>
+                        <p>x + sublayer(x)，帮助梯度传播，训练更深网络</p>
+                </div>
+                <div class="card">
+                    <h3">📏 Layer Norm</h3>
+                        <p>在特征维度归一化，稳定训练过程</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="decoder" class="section">
+            <h2>解码器 (Decoder)</h2>
+            <p>解码器负责生成输出序列，使用自回归方式逐个生成 token。</p>
+
+            <h3>解码器层结构</h3>
+            <pre><code><span class="keyword">class</span> DecoderLayer(nn.Module):
+    <span class="keyword">def</span> forward(self, x, encoder_output, src_mask, tgt_mask):
+        <span class="comment"># 子层 1: Masked Self-Attention</span>
+        attn1 = self.masked_self_attention(x, x, x, tgt_mask)
+        x = self.norm1(x + attn1)
+        
+        <span class="comment"># 子层 2: Cross-Attention (关注编码器输出)</span>
+        attn2 = self.cross_attention(x, encoder_output, encoder_output, src_mask)
+        x = self.norm2(x + attn2)
+        
+        <span class="comment"># 子层 3: Feed Forward</span>
+        ff_output = self.feed_forward(x)
+        x = self.norm3(x + ff_output)
+        
+        <span class="keyword">return</span> x</code></pre>
+
+            <h3>Masked Self-Attention</h3>
+            <p>在解码器中，为了保持自回归特性，需要使用掩码防止当前位置看到未来位置：</p>
+
+            <pre><code><span class="comment"># 创建下三角掩码</span>
+<span class="comment"># 位置 i 只能看到位置 0, 1, ..., i</span>
+mask = torch.tril(torch.ones(seq_len, seq_len))
+<span class="comment">"""
+[1, 0, 0, 0]
+[1, 1, 0, 0]
+[1, 1, 1, 0]
+[1, 1, 1, 1]
+"""</span>
+
+<span class="comment"># 在计算 attention 时应用掩码</span>
+scores = scores.masked_fill(mask == <span class="number">0</span>, <span class="keyword">float</span>(<span class="string">'-inf'</span>))</code></pre>
+        </section>
+
+        <section id="components" class="section">
+            <h2>核心组件详解</h2>
+
+            <h3>位置编码 (Positional Encoding)</h3>
+            <p>Transformer 没有循环结构，需要额外编码位置信息。原始论文使用正弦/余弦函数：</p>
+
+            <div class="formula">PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)<br>PE(pos, 2i+1) = cos(pos /
+                10000<sup>2i/d</sup>)</div>
+
+            <pre><code><span class="keyword">def</span> positional_encoding(max_len, d_model):
+    pe = torch.zeros(max_len, d_model)
+    position = torch.arange(<span class="number">0</span>, max_len).unsqueeze(<span class="number">1</span>)
+    div_term = torch.exp(torch.arange(<span class="number">0</span>, d_model, <span class="number">2</span>) * 
+                         -(<span class="keyword">math</span>.log(<span class="number">10000.0</span>) / d_model))
+    pe[:, <span class="number">0</span>::<span class="number">2</span>] = torch.sin(position * div_term)  <span class="comment"># 偶数维</span>
+    pe[:, <span class="number">1</span>::<span class="number">2</span>] = torch.cos(position * div_term)  <span class="comment"># 奇数维</span>
+    <span class="keyword">return</span> pe</code></pre>
+
+            <h3>前馈网络 (Feed Forward Network)</h3>
+            <pre><code><span class="comment"># 两层全连接网络，中间层维度通常是 4 倍</span>
+FFN(x) = max(<span class="number">0</span>, x·W₁ + b₁)·W₂ + b₂
+
+<span class="comment"># 或使用 GELU 激活函数 (GPT-2+)</span>
+FFN(x) = GELU(x·W₁ + b₁)·W₂ + b₂</code></pre>
+
+            <h3>Layer Normalization</h3>
+            <pre><code><span class="comment"># LayerNorm 在特征维度计算均值和方差</span>
+LayerNorm(x) = γ · (x - μ) / σ + β
+
+<span class="comment"># 与 BatchNorm 的区别：</span>
+<span class="comment"># BatchNorm: 在 batch 维度归一化</span>
+<span class="comment"># LayerNorm: 在 feature 维度归一化 (适合变长序列)</span></code></pre>
+        </section>
+
+        <section id="math" class="section">
+            <h2>数学原理</h2>
+
+            <h3>维度变化</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>步骤</th>
+                        <th>输入维度</th>
+                        <th>输出维度</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Input Tokens</td>
+                        <td>[B, L]</td>
+                        <td>[B, L, D]</td>
+                        <td>词嵌入</td>
+                    </tr>
+                    <tr>
+                        <td>Q, K, V 投影</td>
+                        <td>[B, L, D]</td>
+                        <td>[B, H, L, D/H]</td>
+                        <td>多头拆分</td>
+                    </tr>
+                    <tr>
+                        <td>Attention Score</td>
+                        <td>[B, H, L, D/H]</td>
+                        <td>[B, H, L, L]</td>
+                        <td>QK<sup>T</sup></td>
+                    </tr>
+                    <tr>
+                        <td>Attention Output</td>
+                        <td>[B, H, L, L]</td>
+                        <td>[B, H, L, D/H]</td>
+                        <td>与 V 相乘</td>
+                    </tr>
+                    <tr>
+                        <td>Concat + 投影</td>
+                        <td>[B, H, L, D/H]</td>
+                        <td>[B, L, D]</td>
+                        <td>合并多头</td>
+                    </tr>
+                    <tr>
+                        <td>FFN</td>
+                        <td>[B, L, D]</td>
+                        <td>[B, L, D]</td>
+                        <td>非线性变换</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size:13px;color:var(--text2)">B=Batch Size, L=Sequence Length, D=Model Dimension, H=Number of
+                Heads</p>
+
+            <h3>计算复杂度</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>操作</th>
+                        <th>时间复杂度</th>
+                        <th>空间复杂度</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Self-Attention</td>
+                        <td>O(L²·D)</td>
+                        <td>O(L² + L·D)</td>
+                    </tr>
+                    <tr>
+                        <td>Feed Forward</td>
+                        <td>O(L·D²)</td>
+                        <td>O(L·D)</td>
+                    </tr>
+                    <tr>
+                        <td>总计 (每层)</td>
+                        <td>O(L²·D + L·D²)</td>
+                        <td>O(L² + L·D)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tip warn"><strong>⚠️ 二次复杂度问题</strong>
+                <p style="margin-top:8px">Self-Attention 的 O(L²) 复杂度限制了处理超长序列的能力。这也是为什么许多模型有 2K-8K 的上下文长度限制。各种改进如 Flash
+                    Attention、Sparse Attention 等都在解决这个问题。</p>
+            </div>
+        </section>
+
+        <section id="variants" class="section">
+            <h2>Transformer 变体</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>架构</th>
+                        <th>类型</th>
+                        <th>代表模型</th>
+                        <th>特点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Encoder-Only</strong></td>
+                        <td>双向理解</td>
+                        <td>BERT, RoBERTa</td>
+                        <td>NLU 任务，分类、NER</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Decoder-Only</strong></td>
+                        <td>自回归生成</td>
+                        <td>GPT 系列</td>
+                        <td>文本生成，对话</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Encoder-Decoder</strong></td>
+                        <td>序列到序列</td>
+                        <td>T5, BART</td>
+                        <td>翻译，摘要</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>重要改进</h3>
+            <div class="cards">
+                <div class="card">
+                    <h3">⚡ Flash Attention</h3>
+                        <p>IO-aware Attention，减少 HBM 访问，速度提升 2-4 倍</p>
+                </div>
+                <div class="card">
+                    <h3">🌀 Rotary Position (RoPE)</h3>
+                        <p>旋转位置编码，更好的外推能力</p>
+                </div>
+                <div class="card">
+                    <h3">🔧 RMSNorm</h3>
+                        <p>简化的 LayerNorm，计算更快</p>
+                </div>
+                <div class="card">
+                    <h3">🚪 SwiGLU</h3>
+                        <p>GLU 变体激活函数，性能更好</p>
+                </div>
+            </div>
+
+            <h3>现代 LLM 架构 (以 LLaMA 为例)</h3>
+            <pre><code><span class="comment"># LLaMA 的关键改进</span>
+- Pre-Norm: 在 attention/FFN 之前做 LayerNorm
+- RMSNorm: 替代 LayerNorm
+- SwiGLU: 替代 ReLU/GELU
+- RoPE: 替代绝对位置编码
+- 无 bias: 线性层去掉 bias</code></pre>
+        </section>
+
+        <section id="code" class="section">
+            <h2>代码实现</h2>
+
+            <h3>完整 Self-Attention 实现</h3>
+            <pre><code><span class="keyword">import</span> torch
+<span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn
+<span class="keyword">import</span> math
+
+<span class="keyword">class</span> MultiHeadAttention(nn.Module):
+    <span class="keyword">def</span> __init__(self, d_model, n_heads):
+        <span class="keyword">super</span>().__init__()
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_k = d_model // n_heads
+        
+        <span class="comment"># Q, K, V 投影矩阵</span>
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model)
+        
+    <span class="keyword">def</span> forward(self, q, k, v, mask=<span class="keyword">None</span>):
+        batch_size = q.size(<span class="number">0</span>)
+        
+        <span class="comment"># 线性投影 + 多头拆分</span>
+        Q = self.W_q(q).view(batch_size, -<span class="number">1</span>, self.n_heads, self.d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)
+        K = self.W_k(k).view(batch_size, -<span class="number">1</span>, self.n_heads, self.d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)
+        V = self.W_v(v).view(batch_size, -<span class="number">1</span>, self.n_heads, self.d_k).transpose(<span class="number">1</span>, <span class="number">2</span>)
+        
+        <span class="comment"># Scaled Dot-Product Attention</span>
+        scores = torch.matmul(Q, K.transpose(-<span class="number">2</span>, -<span class="number">1</span>)) / math.sqrt(self.d_k)
+        <span class="keyword">if</span> mask <span class="keyword">is not None</span>:
+            scores = scores.masked_fill(mask == <span class="number">0</span>, <span class="keyword">float</span>(<span class="string">'-inf'</span>))
+        attn_weights = torch.softmax(scores, dim=-<span class="number">1</span>)
+        attn_output = torch.matmul(attn_weights, V)
+        
+        <span class="comment"># 合并多头 + 输出投影</span>
+        attn_output = attn_output.transpose(<span class="number">1</span>, <span class="number">2</span>).contiguous().view(batch_size, -<span class="number">1</span>, self.d_model)
+        <span class="keyword">return</span> self.W_o(attn_output)</code></pre>
+
+            <h3>Transformer Block</h3>
+            <pre><code><span class="keyword">class</span> TransformerBlock(nn.Module):
+    <span class="keyword">def</span> __init__(self, d_model, n_heads, d_ff, dropout=<span class="number">0.1</span>):
+        <span class="keyword">super</span>().__init__()
+        self.attention = MultiHeadAttention(d_model, n_heads)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Linear(d_ff, d_model)
+        )
+        self.dropout = nn.Dropout(dropout)
+        
+    <span class="keyword">def</span> forward(self, x, mask=<span class="keyword">None</span>):
+        <span class="comment"># Self-Attention + Add & Norm</span>
+        attn_output = self.attention(x, x, x, mask)
+        x = self.norm1(x + self.dropout(attn_output))
+        
+        <span class="comment"># Feed Forward + Add & Norm</span>
+        ff_output = self.feed_forward(x)
+        x = self.norm2(x + self.dropout(ff_output))
+        
+        <span class="keyword">return</span> x</code></pre>
+
+            <div class="tip success"><strong>✅ 完整模型实现</strong>
+                <p style="margin-top:8px">更完整的实现可参考：<br>
+                    • HuggingFace Transformers 库<br>
+                    • Annotated Transformer (哈佛 NLP)<br>
+                    • nanoGPT (Andrej Karpathy)</p>
+            </div>
+        </section>
+    </div>
+    <script>document.querySelectorAll('.toc a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' }) }))</script>
+</body>
+
+</html>
